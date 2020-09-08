@@ -203,9 +203,6 @@ main = "Residuals", xlab = "X-coordinates", ylab = "Y-coordinates")
 
 Vario1 <- variogram(E ~ 1, mydata)
 plot(Vario1)
-
-vgm1 <- gstat::variogram(E∼x+y, mydata)
-plot(vgm1)
 ```
 Standardised residuals obtained by the linear regression model plotted versus their spatial coordinates. Black dotes are negative residuals, and grey dots are positive residuals.
 
@@ -758,7 +755,8 @@ siteDF_coord <- na.omit(siteDF_coord)
 dim(siteDF_coord)
 
 # Find residuals from response variable of final model
-E <- residuals(glmm.nb.min.3, type = "response")
+#E <- residuals(glmm.nb.min.3, type = "response")
+E <- resid(glmm.nb.min.3)
 
 siteDF_res <- data.frame(E, siteDF_coord$lat_cor, siteDF_coord$lon_cor)
 
@@ -937,6 +935,7 @@ df.na.glmer1.17 <- glmer(Sh_all ~ (1|shehia.x/site.x) +
 
 # Find residuals from response variable of final model
 E <- residuals(df.na.glmer1.17, type = "response")
+#E <- resid(df.na.glmer1.17)
 
 snailDF_res <- data.frame(E, df.na.rem$lat_Cor, df.na.rem$lon_Cor)
 
@@ -953,6 +952,6 @@ plot(Vario1)
 
 
 
-
+###!!!! USE Residuals() from BinomTools package (not available for my curr. R version )
 
 

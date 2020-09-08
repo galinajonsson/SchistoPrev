@@ -27,7 +27,7 @@ output:
 df2 <- read.csv("../Data/TempTom/df2_new.csv")
 
 # Subset columns of interest
-keeps <- c("USI", "shehia", "survey", "type", "wbtype2", "wlevel", "BgBn_pres", "BgBn_number", "temp", "ph", "cond", "Bulinus_xeno", "Sh", "Sh_pres", "Sh_prev")
+keeps <- c("USI", "shehia", "survey", "type", "wbtype2", "wlevel", "BgBn_pres", "BgBn_number", "temp", "ph", "cond", "Bulinus_xeno", "Sh", "Sh_pres", "Sh_prev", "lat_cor", "lon_cor", "survey_date")
   
 siteDF <- df2[keeps]
 
@@ -65,6 +65,39 @@ p
 \n
 
 Very zero inflated
+
+
+Test whether there is evidence for collinearity among explanatory variables. 
+
+```{r collinearity-explanVars-test, message=FALSE, warning=FALSE, cache=TRUE}
+require("PerformanceAnalytics")
+require("ggplot2")
+
+chart.Correlation(siteDF[,c("temp", "ph", "cond", "Bulinus_xeno", "Sh")], 
+                  histogram=TRUE, pch=19, method = "kendall")
+
+
+ggplot(siteDF, aes(x = type, y = temp)) + geom_boxplot()
+ggplot(siteDF, aes(x = wbtype2, y = temp)) + geom_boxplot()
+ggplot(siteDF, aes(x = wlevel, y = temp)) + geom_boxplot()
+
+ggplot(siteDF, aes(x = type, y = ph)) + geom_boxplot()
+ggplot(siteDF, aes(x = wbtype2, y = ph)) + geom_boxplot()
+ggplot(siteDF, aes(x = wlevel, y = ph)) + geom_boxplot()
+
+ggplot(siteDF, aes(x = type, y = cond)) + geom_boxplot()
+ggplot(siteDF, aes(x = wbtype2, y = cond)) + geom_boxplot()
+ggplot(siteDF, aes(x = wlevel, y = cond)) + geom_boxplot()
+```
+
+
+
+
+\n
+
+temp and ph are clearly collinear 
+
+
 
 
 ##### Generalised linear mixed effects model for number of snails collected per survey - testing distributions
@@ -145,17 +178,40 @@ qqline(resid(glmm.nb.min.4))
 ```
 
 \n
-I think model 3 shows a very nice n shug fit although the others aren't too bad either. Lets look at whether they converged:
+I think model 3 shows a very nice n snug fit although the others aren't too bad either. Lets look at whether they converged:
 
 
 
 ```{r glmer-BgBn_number-nb-min-models-summary, message=FALSE, warning=FALSE, cache=TRUE}
 # summary
-anova(glmm.nb.min.1, glmm.nb.min.2, glmm.nb.min.3, glmm.nb.min.3)
+anova(glmm.nb.min.1, glmm.nb.min.2, glmm.nb.min.3, glmm.nb.min.4)
 ```
-Right so model 1-3 reached convergence (whilst 4 did not) in the end and model three has the best fit - as good if not better than the original maximal maodel - and the best (i.e.) lowest ACI among the models that reached convergence. 
+Right so model 1-3 reached convergence (whilst 4 did not) in the end and model three has the best fit - as good if not better than the original maximal model - and the best (i.e.) lowest ACI among the models that reached convergence. 
 
 ### Final model
+Test whether there is evidence for spatial or temporal autocorrelation. 
+```{r glmm.nb.min.3-autocorrelation, cache=TRUE}
+E <- resid(glmm.nb.min.3)
+require(gstat)
+require(sp)
+mydata <- (siteDF[complete.cases(siteDF[, c("BgBn_number", "wlevel", "type", "survey",
+                                           "temp", "shehia", "site", "lat_cor", "lon_cor", "survey_date")]),])
+mydata <- data.frame(E, mydata$lat_cor, mydata$lon_cor)
+coordinates(mydata) <- c("mydata.lat_cor","mydata.lon_cor")
+bubble(mydata, "E", col = c("black","grey"),
+main = "Residuals", xlab = "X-coordinates", ylab = "Y-coordinates")
+
+Vario1 <- variogram(E ~ 1, mydata)
+plot(Vario1)
+
+vgm1 <- gstat::variogram(E∼x+y, mydata)
+plot(vgm1)
+```
+Standardised residuals obtained by the linear regression model plotted versus their spatial coordinates. Black dotes are negative residuals, and grey dots are positive residuals.
+
+
+
+
 First I'll do a quick overview and then go through factor by factor
 
 

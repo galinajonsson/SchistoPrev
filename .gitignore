@@ -3,26 +3,13 @@
 *.rds
 *.xls
 *.csv.zip
-*daily_count_data.txt
-*visits_data.txt.zip
-*daily_count_data.txt.zip
-*site_data.txt
-*species_data.txt
-*visits_data.txt
-*bnm_data.txt
-*bnm_species(1).txt
-*NMRS_species.txt
-*bnm_species.txt
-*NMRS_data.txt
-*NMRS_species(1).txt
-*NMRS_data(1).txt
-*NMRS_species(2).txt
-
-
 
 # Ignore word files
 *.docx
 *.rtf
+
+# Ignore html files
+*.html
 
 # Ignore .DS_Store files
 *.DS_Store

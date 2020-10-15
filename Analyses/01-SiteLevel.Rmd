@@ -378,7 +378,7 @@ AIC(glmm.ZInb.min.5, glmm.ZInb.min.5.1, glmm.ZInb.min.5.2, glmm.ZInb.min.5.3, gl
 Likelihood ratio tests revealed that the model, in which "wlevel" was dropped from the count data model (glmm.ZInb.min.5.2) gave an associated p-value of 0.8239 *BUT also the lowest* AIC (1746.647). However, dropping "wbtype2" gave a p-value of 0.5574 (and both wbtype 2 and wlevel are highely likely to be correlated) so we decide to keep "wlevel" and drop "wbtype2", and test whether dropping another term improves model fit further.  
 
 
-```{r glmer-BgBn_number-nb-min-models2, message=FALSE, warning=FALSE, cache=TRUE}
+```{r glmer-BgBn_number-nb-min-models3, message=FALSE, warning=FALSE, cache=TRUE}
 # Drop wlevel
 glmm.ZInb.min.5.1.1 <- glmmTMB(BgBn_number ~ type + survey +
                          arm::rescale(temp) + 
@@ -415,11 +415,6 @@ AIC(glmm.ZInb.min.5.1, glmm.ZInb.min.5.1.1, glmm.ZInb.min.5.1.2, glmm.ZInb.min.5
 ```
 
 Likelihood ratio tests revealed that the model, in which "wlevel" was dropped from the count data model (glmm.ZInb.min.5.2) gave an associated p-value of 0.8057 and the lowest AIC (1735.668). Therefore, we also drop "wlevel", making our final model glmm.ZInb.min.5.1.1
-
-```{r glmer-BgBn_number-nb-min-models-summary, message=FALSE, warning=FALSE, cache=TRUE}
-# summary
-summary(glmm.ZInb.min.5.1.1)
-```
 
 
 
@@ -496,7 +491,7 @@ plot(Vario1)
 First I'll do a quick overview and then go through factor by factor
 #### Overview
 
-```{r glmm.ZInb.min.5.1.1-Overview, cache=TRUE}
+```{r glmm.ZInb.min.5.1.1-Overview, cache=TRUE, eval=FALSE}
 require(car)
 car::Anova(glmm.ZInb.min.5.1.1,type="III")
 
@@ -528,7 +523,7 @@ summary(glmm.ZInb.min.3)
 **wlevel**: The effect of water level on snail abundance is statistically significantly linear and negative (since the wlevel.L term is significant whilst the wlevel.Q term (water level quadratic) is not). I.e. the effect of water level on snail abundance follows this equation: exp(8.48248) + wlevel.L x 0.3626526 (that last number is from exp(-1.01431)). In other words, ON AVERAGE, there is a -63.73474% ((exp(-1.01431)-1)*100) DECREASE FROM "1" to "2", and from "2" to "3". HOWEVER, although the model says that is a statistically significant negative trend, snail abundance is not statistically different between the three water level factors tested here (cos its ecology and varies etc etc). See that SEs and Confidence limits overlap below. Not a problem tho because overall, you know that there is a statistically significant negative trends going from "1" to "2" to "3" :) 
 \n
 \n
-```{r glmm.nb.min.3-wlevel, cache=TRUE}
+```{r glmm.nb.min.3-wlevel, cache=TRUE, eval=FALSE}
 require(emmeans)
 emmeans(glmm.ZInb.min.3, c("wlevel"), data = siteDF, type = "response")
 ```
@@ -537,7 +532,7 @@ emmeans(glmm.ZInb.min.3, c("wlevel"), data = siteDF, type = "response")
 
 #### Type
 **Type**: The effect of type on snail abundance is statistically significantly negatively linear AND negatively quadratic! (since the Type.L and Type.Q terms are significant). In other words, going from "HNR" to "HD" to "LNR" to "LD", snail abindance decreases and this decrease accelerates at a certain point (thus the significant quadratic term). It is obvious from the plots above and when comparing individual factor levels (see below) that "HNR", "HD" and "LNR" are not statistically different from each other BUT "LD" has lower snail abundance than any of the other three "types" and its statistically significant in terms of non-overlapping SEs/CLs. 
-```{r glmm.nb.min.3-type, cache=TRUE}
+```{r glmm.nb.min.3-type, cache=TRUE, eval=FALSE}
 require(emmeans)
 emmeans(glmm.nb.min.3, c("type"), data = siteDF, type = "response")
 ```
@@ -546,7 +541,7 @@ emmeans(glmm.nb.min.3, c("type"), data = siteDF, type = "response")
 #### Survey
 **Survey**: survey 2, 3 and 4 are stat diff from survey 1 according to the mdoel (see summary(glmm.nb.min.3) above) and thre three surveys have FEWER snails than survey 1. Comparing survey 2, 3 and 4 (see SEs and CLs below) it's cear that there is not a statistically significant difference between snail abundance among suveys 2, 3 and 4 (which is in line with top plot too).
 \n
-```{r glmm.nb.min.3-survey, cache=TRUE}
+```{r glmm.nb.min.3-survey, cache=TRUE, eval=FALSE}
 require(emmeans)
 emmeans(glmm.nb.min.3, c("survey"), data = siteDF, type = "response")
 ```

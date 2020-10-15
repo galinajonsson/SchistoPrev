@@ -463,6 +463,7 @@ res = recalculateResiduals(res, group = mydata$myjulian)
 testTemporalAutocorrelation(res, time = unique(mydata$myjulian))
 ```
 
+We get a p-value greater than 0.05 and can therefore reject the alternative hypothesis (true autocorrelation is not 0) and assume that our "survey" variable satisfactory accounts for any temporal autocorrelation.  
 
 
 ```{r glmm.ZInb.min.5.1.1-autocorrelation-spatial, cache=TRUE, message=FALSE}
@@ -486,14 +487,17 @@ testSpatialAutocorrelation(E, x = mydata$lat_cor, y = mydata$lon_cor)
 Vario1 <- variogram(E2 ~ 1, mydata)
 plot(Vario1)
 ```
+We get a p-value greater than 0.05 and can therefore reject the alternative hypothesis (existance of Spatial autocorrelation that is not accounted for by the nested random ractors shehia and site)
 
 
-First I'll do a quick overview and then go through factor by factor
-#### Overview
 
+
+## Results
+
+### Overview
 ```{r glmm.ZInb.min.5.1.1-Overview, cache=TRUE, eval=FALSE}
 require(car)
-car::Anova(glmm.ZInb.min.5.1.1,type="III")
+car::Anova(glmm.ZInb.min.5.1.1, type="III")
 
 effects_ok <- (requireNamespace("effects") && getRversion() >= "3.6.0")
 if (effects_ok) {

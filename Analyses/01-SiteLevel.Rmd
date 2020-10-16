@@ -497,6 +497,21 @@ We get a p-value greater than 0.05 and can therefore reject the alternative hypo
 ### Overview
 ```{r glmm.ZInb.min.5.1.1-Overview, cache=TRUE, eval=FALSE}
 require(car)
+require(glmmTMB)
+require(emmeans)
+require(effects)
+require(multcomp)
+require(MuMIn)
+require(DHARMa)
+require(broom)
+require(broom.mixed)
+require(dotwhisker)
+require(ggplot2)
+require(texreg)
+require(xtable)
+
+
+
 car::Anova(glmm.ZInb.min.5.1.1, type="III")
 
 effects_ok <- (requireNamespace("effects") && getRversion() >= "3.6.0")
@@ -504,13 +519,16 @@ if (effects_ok) {
 (ae <- allEffects(glmm.ZInb.min.5.1.1))
 plot(ae)
 }
-
+effects::Effect("type", glmm.ZInb.min.5.1.1)
 (ae <- allEffects(glmm.ZInb.min.5.1.1))
 plot(ae)
 
 require(effects)
 plot(allEffects(glmm.ZInb.min.5.1.1))
-summary(glmm.ZInb.min.3)
+
+plot(predictorEffects(glmm.ZInb.min.5.1.1, ~ type), axes=list(grid=TRUE))
+
+summary(glmm.ZInb.min.5.1.1)
 ```
 \n
 \n
@@ -529,7 +547,7 @@ summary(glmm.ZInb.min.3)
 \n
 ```{r glmm.nb.min.3-wlevel, cache=TRUE, eval=FALSE}
 require(emmeans)
-emmeans(glmm.ZInb.min.3, c("wlevel"), data = siteDF, type = "response")
+emmeans(glmm.ZInb.min.5.1.1, c("wlevel"), data = siteDF, type = "response")
 ```
 \n
 \n
@@ -538,7 +556,7 @@ emmeans(glmm.ZInb.min.3, c("wlevel"), data = siteDF, type = "response")
 **Type**: The effect of type on snail abundance is statistically significantly negatively linear AND negatively quadratic! (since the Type.L and Type.Q terms are significant). In other words, going from "HNR" to "HD" to "LNR" to "LD", snail abindance decreases and this decrease accelerates at a certain point (thus the significant quadratic term). It is obvious from the plots above and when comparing individual factor levels (see below) that "HNR", "HD" and "LNR" are not statistically different from each other BUT "LD" has lower snail abundance than any of the other three "types" and its statistically significant in terms of non-overlapping SEs/CLs. 
 ```{r glmm.nb.min.3-type, cache=TRUE, eval=FALSE}
 require(emmeans)
-emmeans(glmm.nb.min.3, c("type"), data = siteDF, type = "response")
+emmeans(glmm.ZInb.min.5.1.1, c("type"), data = siteDF, type = "response")
 ```
 
 
@@ -547,7 +565,7 @@ emmeans(glmm.nb.min.3, c("type"), data = siteDF, type = "response")
 \n
 ```{r glmm.nb.min.3-survey, cache=TRUE, eval=FALSE}
 require(emmeans)
-emmeans(glmm.nb.min.3, c("survey"), data = siteDF, type = "response")
+emmeans(glmm.ZInb.min.5.1.1, c("survey"), data = siteDF[complete.cases(siteDF[ , c("temp")]),], type = "response")
 ```
 
 

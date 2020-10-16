@@ -8,6 +8,11 @@ output:
     toc_depth: 3
     toc_float: true
 ---
+# Notes (remove before sub)
+* See further Qs where I've written "TOM" in below text  
+* The figures used in the thesis are not publication standard but I'll reproduce once you know which journal you're going for  
+* In short for your understanding:  the optimal model is a type of mixture model known as a zero inflated negative binomial (**ZINB**) GLMM. The underlying process is such that in the count process (i.e. of *Bulinus* in the field), you sometimes counted zero snails because the snails don’t like the covariates, or due to that you didn't have time to sieve through the whole freakin pond and/or snails were difficult to observe. Hence the resulting survey data fall into three categories: snails were collected, snails were present but not collected (false zeroes) and snails were not present and not collected (true zeroes). ZINBs are called mixture models because the zeros are modelled as coming from two different processes: the binomial process and the count process. the binomial GLM models the probability of measuring a false positive versus all other types of data (counts and true zeros), whilst the count process (non zeros and true zeros) is modelled by a  negative binomial (ZINB) GLMM. 
+* Note that glmmTMB() fits the model using the Laplace approximation - this should probably be mentined in the ms... or not... hmm 
 
 
 ## The data
@@ -43,7 +48,7 @@ siteDF <- siteDF[complete.cases(siteDF[ , "BgBn_number"]),]
 
 
 ### Visualise response variable
-Number of **Bulinus** individuals collected per survey
+Number of *Bulinus* individuals collected per survey
 ```{r respvar, cache=TRUE, message=FALSE}
 require(ggplot2)
 p <- ggplot(siteDF,aes(x=BgBn_number))+
@@ -56,18 +61,20 @@ p
 
 \n
 
-The response variable is heavily zero inflated. I.e. most surveys did not collect any **Bulinus** individuals.
+The response variable is heavily zero inflated. I.e. most surveys did not collect any *Bulinus* individuals.
 
 
 ### Test for collinearity between explanatory variables
-**Environmental variables of interest**   
-- wlevel -> water level   
-- wbtype2 -> waterbody type: either permanent or temporary   
-- syrvey -> four surveys; corresponds to time of year; potentially correlated with wlevel and wbtype2   
-- temp -> water temperature  
-- cond -> conductivity; indirect measure of water chemistry  
-- ph -> potentially correlated with conductivity  
-- type -> human response to treatment; whether people got reinfected quickly or not; four categories   
+\n
+\n
+#### Explanatory variables of potential interest
+* **wlevel** -> water level    
+* **wbtype2** -> waterbody type: either permanent or temporary    
+* **syrvey** -> four surveys; corresponds to time of year; potentially correlated with wlevel and wbtype2    
+* **temp** -> water temperature   
+* **cond** -> conductivity; indirect measure of water chemistry   
+* **ph** -> potentially correlated with conductivity   
+* **type** -> human response to treatment; whether people got reinfected quickly or not; four categories    
 
 
 Potential collinearity between quantitative explanatory variables is tested using the Kendall rank coefficient to establish whether variables are statistically dependent. This test is non-parametric, i.e. does not rely on any assumptions on the distributions of the variables. Collinearity between qualitative and quantitative explanatory variables is visually examined using box plots. 
@@ -75,7 +82,6 @@ Potential collinearity between quantitative explanatory variables is tested usin
 require("PerformanceAnalytics")
 require("ggplot2")
 require("ggpubr")
-
 
 
 ### Quantitative explanatory variables: Kendall rank coefficient
@@ -116,7 +122,7 @@ ggarrange(ggplot(siteDF, aes(x = type, y = cond)) + geom_boxplot(),
 
 \n
 
-Temperature and pH are negatively correlated (p<0.001). From hereon, only Temperature will be used in analyses. Temperature and conductivity show some positive sorrelation although not statistically significant (p=0.1).
+Temperature and pH are negatively correlated (p<0.001). From hereon, only temperature will be used in analyses. Temperature and conductivity show some positive correlation although not statistically significant (p=0.1).
 
 
 
@@ -125,34 +131,48 @@ Temperature and pH are negatively correlated (p<0.001). From hereon, only Temper
 
 The variables used in initial model selection are as follows: 
 
-**Response variable**   
-- BgBn_number -> The number of **Bulinus** individuals collected per survey  
+#### Response variable 
+* **BgBn_number** -> The number of *Bulinus* individuals collected per survey  
 
 
-**Explanatory variables**   
-- wlevel -> water level   
-- wbtype2 -> waterbody type: either permanent or temporary   
-- syrvey -> four surveys; corresponds to time of year; potentially correlated with wlevel and wbtype2; this vaiable will not be dropped in any model simplification as it accounts for **known differences in snail abundance** (TOM!?) between different seasons.    
-- temp -> water temperature  
-- cond -> conductivity; indirect measure of water chemistry  
-- type -> human response to treatment; whether people got reinfected quickly or not; four categories  
+#### Explanatory variables of potential interest
+* **wlevel** -> water level    
+* **wbtype2** -> waterbody type: either permanent or temporary    
+* **syrvey** -> four surveys; corresponds to time of year; potentially correlated with wlevel and wbtype2; this vaiable will not be dropped in any model simplification as it accounts for **known differences in snail abundance** (TOM!?) between different seasons.  
+* **temp** -> water temperature   
+* **cond** -> conductivity; indirect measure of water chemistry   
+* **ph** -> potentially correlated with conductivity   
+* **type** -> human response to treatment; whether people got reinfected quickly or not; four categories    
 
-**Random factors**   
-- shehia -> regions/wards on Pemba
-- site -> sites within shesias; hence, site is nested within shehia in models
+
+
+#### Random factors   
+* **shehia** -> regions/wards on Pemba
+* **site** -> sites within shesias; hence, site is nested within shehia in models
 
 
 Given the variables described above, we must use a type of generalised linear mixed effects model to test what effects the number of snails collected per survey. 
 
 ### Distributions
-First, we test which distribution best fits the date in a maximal model (i.e. including all explanatory variables and the random factors). As the response variable is count data, we test both the Poisson and the negative binomial distribution. Moreover, as the response variable is zero inflated, we also test whether the inclusion of a zero inflation parameter improves model fit for the Poisson and the negative binomial distribution. Model fit is evaluated based on visual inspection of QQ plots, AIC and likelihood ratio tests (variance structure).
+First, we test which distribution best fits the data in a maximal model (i.e. including all potential explanatory variables and the random factors). As the response variable is count data, we test both the Poisson and the negative binomial distribution. Moreover, as the response variable is zero inflated, we also test whether the inclusion of a zero inflation parameter improves model fit for the Poisson and the negative binomial distribution. Model fit is evaluated based on visual inspection of QQ plots, AIC and likelihood ratio tests (variance structure).
 
 ```{r glmer-BgBn_number-Distributions, message=FALSE, warning=FALSE, cache=TRUE}
 require(lme4)
-library(arm)
+require(devtools)
+#devtools::install_github("glmmTMB/glmmTMB/glmmTMB")
 require(glmmTMB)
 require(DHARMa)
 require(lmtest)
+
+## load (installing if necessary) the checkpoint package
+while (!require("checkpoint")) install.packages("checkpoint")
+## retrieve build date of installed version of TMB
+bd <- as.character(asDateBuilt(packageDescription("TMB",fields="Built")))
+oldrepo <- getOption("repos")
+setSnapshot(bd)
+install.packages("Matrix")
+options(repos=oldrepo) ## restore original repo
+
 
 ######################################################################
 ######################## Poisson Distribution ########################
@@ -160,7 +180,7 @@ require(lmtest)
 
 # Fit maximal model
 glmm.poisson <- glmer(BgBn_number ~ wbtype2 + wlevel + type + survey +
-                 arm::rescale(temp) + arm::rescale(cond) +
+                 temp + cond +
                  (1|shehia/site), data=siteDF, family = "poisson")
 
 # test for zero-inflation
@@ -176,7 +196,7 @@ plot(simulateResiduals(glmm.poisson,  n = 1000), rank = TRUE)
 
 # Fit maximal model
 glmm.ZIpoisson <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + type + survey +
-                         arm::rescale(temp) + arm::rescale(cond) + 
+                          temp + cond + 
                           (1|shehia/site), data=siteDF,
                          ziformula=~1, # one zero inflation parameter applying to all observations
                          family=poisson)
@@ -194,7 +214,7 @@ plot(simulateResiduals(glmm.ZIpoisson,  n = 1000), rank = TRUE)
 
 # Fit maximal model
 glmm.nb <- glmer.nb(BgBn_number ~ wbtype2 + wlevel + type + survey +
-                         arm::rescale(temp) + arm::rescale(cond) + 
+                         temp + cond + 
                           (1|shehia/site), data=siteDF)
 # test for zero-inflation
 testZeroInflation(simulateResiduals(glmm.nb,  n = 1000)) # No evidence for zero inflation 
@@ -210,7 +230,7 @@ plot(simulateResiduals(glmm.nb,  n = 1000), rank = TRUE)
 
 # Fit maximal model
 glmm.ZInb <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + type + survey +
-                         arm::rescale(temp) + arm::rescale(cond) + 
+                         temp + cond + 
                           (1|shehia/site), data=siteDF,
                          ziformula = ~1,
                          family = nbinom2)
@@ -222,20 +242,31 @@ plot(simulateResiduals(glmm.ZInb,  n = 1000), rank = TRUE)
 
 
 
-
-### Model comparison
-
+######################################################################
+########################## Model Comparison ##########################
+######################################################################
 require(lmtest)
+
+### Likelihood ratio tests
+
+# Poison vs zero inflated Poisson
 lrtest(glmm.poisson, glmm.ZIpoisson)
-lrtest(glmm.nb, glmm.poisson)
+
+# Negative binomial vs Poison 
+lrtest(glmm.nb, glmm.ZIpoisson)
+
+# Negative binomial vs  zero inflated negative binomial
 lrtest(glmm.nb, glmm.ZInb)
+
+
+### AIC
 AIC(glmm.poisson, glmm.ZIpoisson, glmm.nb, glmm.ZInb)
 ```
 
 
 \n
 
-The negative binomial distribution clearly fits the data better than the Poisson distribution, as evident from AIC values (XX) and visual inspection of qq plots. The inclusion of a zero inflation parameter improves model fit for both the Poisson distribution and negative binomial distribution. As such, a zero inflated negative binomial distribution gives the best fit and will be used form hereon. 
+The inclusion of a zero inflation parameter improves model fit for the Poisson distribution, as evident from the likelihood ratio test (p < 2.2e-16), AIC (6716 vs 4550) and visual inspection of QQ plots. However, the negative binomial distribution fits the data better than the zero inflated Poisson distribution (likelihood ratio test: p < 2.2e-16; AIC: 1745 vs 4550). Again, the inclusion of a zero inflation parameter improves model fit for the negative binomial distribution as well, although improvements aren't as significant as in the case of the Poisson distribution. Nonetheless, a zero inflated negative binomial distribution gives the best fit and will be used to fit the data. 
 
 
 
@@ -246,53 +277,74 @@ The negative binomial distribution clearly fits the data better than the Poisson
 \n
 \n
 
-##### Minimising model
+### Variables
 Now we test which of the explanatory variables can be dropped from the maximal model. We drop each term in turn and select the optimal model using the likelihood ratio test and AIC. Note that we fit the models using a subset of the surveys which have measurements for all explanatory variables.
 
 ```{r glmer-BgBn_number-nb-min-models1, message=FALSE, warning=FALSE, cache=TRUE}
 # Fit maximal model
 glmm.ZInb.max <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + type + survey +
-                         arm::rescale(temp) + arm::rescale(cond) + 
+                         temp + cond + 
                           (1|shehia/site), 
+                         contrasts=list(wbtype2="contr.sum", 
+                                        wlevel="contr.sum", 
+                                        type="contr.sum",
+                                        survey="contr.sum"),
                      data=siteDF[complete.cases(siteDF[ , c("temp", "cond")]),],
                          ziformula = ~1,
                          family = nbinom2)
 
 # Drop wbtype2
 glmm.ZInb.min.1 <- glmmTMB(BgBn_number ~ wlevel + type + survey +
-                         arm::rescale(temp) + arm::rescale(cond) + 
+                         temp + cond + 
                           (1|shehia/site), 
+                         contrasts=list(wlevel="contr.sum", 
+                                        type="contr.sum",
+                                        survey="contr.sum"),
                       data=siteDF[complete.cases(siteDF[ , c("temp", "cond")]),],
                          ziformula = ~1,
                          family = nbinom2)
 
 # Drop wlevel
 glmm.ZInb.min.2 <- glmmTMB(BgBn_number ~ wbtype2 + type + survey +
-                         arm::rescale(temp) + arm::rescale(cond) + 
+                         temp + cond + 
                           (1|shehia/site), 
+                         contrasts=list(wbtype2="contr.sum", 
+                                        type="contr.sum",
+                                        survey="contr.sum"),
                       data=siteDF[complete.cases(siteDF[ , c("temp", "cond")]),],
                          ziformula = ~1,
                          family = nbinom2)
 
 # Drop type
 glmm.ZInb.min.3 <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + survey +
-                         arm::rescale(temp) + arm::rescale(cond) + 
+                         temp + cond + 
                           (1|shehia/site), 
+                         contrasts=list(wbtype2="contr.sum", 
+                                        wlevel="contr.sum", 
+                                        survey="contr.sum"),
                          data=siteDF[complete.cases(siteDF[ , c("temp", "cond")]),],
                          family = nbinom2)
 
 # Drop temp
 glmm.ZInb.min.4 <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + type + survey +
-                         arm::rescale(cond) + 
+                         cond + 
                           (1|shehia/site), 
+                         contrasts=list(wbtype2="contr.sum", 
+                                        wlevel="contr.sum", 
+                                        type="contr.sum",
+                                        survey="contr.sum"),
                          data=siteDF[complete.cases(siteDF[ , c("temp", "cond")]),],
                          ziformula = ~1,
                          family = nbinom2)
 
 # Drop cond
 glmm.ZInb.min.5 <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + type + survey +
-                         arm::rescale(temp) + 
+                         temp + 
                           (1|shehia/site), 
+                         contrasts=list(wbtype2="contr.sum", 
+                                        wlevel="contr.sum", 
+                                        type="contr.sum",
+                                        survey="contr.sum"),
                          data=siteDF[complete.cases(siteDF[ , c("temp", "cond")]),],
                          ziformula = ~1,
                          family = nbinom2)
@@ -313,15 +365,19 @@ AIC(glmm.ZInb.max, glmm.ZInb.min.1, glmm.ZInb.min.2, glmm.ZInb.min.3, glmm.ZInb.
 \n
 
 
-The model, in which "cond" was dropped from the count data model (glmm.ZInb.min.5) had an associated p-value of 0.9106 and although it did not have the lowest AIC (1740), little difference in AIC values between models was observed, therefore we drop this term. 
+The model, in which "cond" was dropped from the count data model (glmm.ZInb.min.5) had an associated p-value of 0.9106 and although it did not have the lowest AIC (1740), it had the second lowest AIC value; therefore, we drop the "cond" term. 
 
-As these test are approximate and the AICs of models with and without "cond" are very similar, we see whether dropping another term improves model fit further. 
+As these test are approximate and the AICs of models with and without "cond" are very similar in terms of AIC-values, we test whether dropping another term improves model fit further. 
 
 ```{r glmer-BgBn_number-nb-min-models2, message=FALSE, warning=FALSE, cache=TRUE}
 # Refit glmm.ZInb.min.5
 glmm.ZInb.min.5 <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + type + survey +
-                         arm::rescale(temp) + 
+                         temp + 
                           (1|shehia/site), 
+                         contrasts=list(wbtype2="contr.sum", 
+                                        wlevel="contr.sum", 
+                                        type="contr.sum",
+                                        survey="contr.sum"),
                          data=siteDF[complete.cases(siteDF[ , c("temp")]),],
                          ziformula = ~1,
                          family = nbinom2)
@@ -330,8 +386,11 @@ glmm.ZInb.min.5 <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + type + survey +
 
 # Drop wbtype2
 glmm.ZInb.min.5.1 <- glmmTMB(BgBn_number ~ wlevel + type + survey +
-                         arm::rescale(temp) + 
+                         temp + 
                           (1|shehia/site), 
+                         contrasts=list(wlevel="contr.sum", 
+                                        type="contr.sum",
+                                        survey="contr.sum"),
                          data=siteDF[complete.cases(siteDF[ , c("temp")]),],
                          ziformula = ~1,
                          family = nbinom2)
@@ -339,16 +398,22 @@ glmm.ZInb.min.5.1 <- glmmTMB(BgBn_number ~ wlevel + type + survey +
 
 # Drop wlevel
 glmm.ZInb.min.5.2 <- glmmTMB(BgBn_number ~ wbtype2 + type + survey +
-                         arm::rescale(temp) + 
+                         temp + 
                           (1|shehia/site), 
+                         contrasts=list(wbtype2="contr.sum", 
+                                        type="contr.sum",
+                                        survey="contr.sum"),
                          data=siteDF[complete.cases(siteDF[ , c("temp")]),],
                          ziformula = ~1,
                          family = nbinom2)
 
 # Drop type
 glmm.ZInb.min.5.3 <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + survey +
-                         arm::rescale(temp) + 
+                         temp + 
                           (1|shehia/site), 
+                         contrasts=list(wbtype2="contr.sum", 
+                                        wlevel="contr.sum", 
+                                        survey="contr.sum"),
                          data=siteDF[complete.cases(siteDF[ , c("temp")]),],
                          ziformula = ~1,
                          family = nbinom2)
@@ -356,6 +421,9 @@ glmm.ZInb.min.5.3 <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + survey +
 # Drop temp
 glmm.ZInb.min.5.4 <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + type + survey +
                           (1|shehia/site), 
+                         contrasts=list(wlevel="contr.sum", 
+                                        type="contr.sum",
+                                        survey="contr.sum"),
                          data=siteDF[complete.cases(siteDF[ , c("temp")]),],
                          ziformula = ~1,
                          family = nbinom2)
@@ -375,22 +443,26 @@ AIC(glmm.ZInb.min.5, glmm.ZInb.min.5.1, glmm.ZInb.min.5.2, glmm.ZInb.min.5.3, gl
 \n
 
 
-Likelihood ratio tests revealed that the model, in which "wlevel" was dropped from the count data model (glmm.ZInb.min.5.2) gave an associated p-value of 0.8239 *BUT also the lowest* AIC (1746.647). However, dropping "wbtype2" gave a p-value of 0.5574 (and both wbtype 2 and wlevel are highely likely to be correlated) so we decide to keep "wlevel" and drop "wbtype2", and test whether dropping another term improves model fit further.  
+Likelihood ratio tests revealed that the model, in which "wlevel" was dropped from the count data model (glmm.ZInb.min.5.2) gave an associated p-value of 0.8239 but also the lowest AIC (1746.647) among all models tested. However, dropping "wbtype2" (glmm.ZInb.min.5.1) gave a p-value of 0.5574 (and both wbtype 2 and wlevel are likely to be correlated) so we decide to keep "wlevel" and drop "wbtype2", and test whether dropping another term improves model fit further.  
 
 
 ```{r glmer-BgBn_number-nb-min-models3, message=FALSE, warning=FALSE, cache=TRUE}
 # Drop wlevel
 glmm.ZInb.min.5.1.1 <- glmmTMB(BgBn_number ~ type + survey +
-                         arm::rescale(temp) + 
+                         temp + 
                           (1|shehia/site), 
+                         contrasts=list(type="contr.sum",
+                                        survey="contr.sum"),
                          data=siteDF[complete.cases(siteDF[ , c("temp")]),],
                          ziformula = ~1,
                          family = nbinom2)
 
 # Drop type
 glmm.ZInb.min.5.1.2 <- glmmTMB(BgBn_number ~ wlevel + survey +
-                         arm::rescale(temp) + 
-                          (1|shehia/site), 
+                         temp + 
+                          (1|shehia/site),  
+                         contrasts=list(wlevel="contr.sum", 
+                                        survey="contr.sum"),
                          data=siteDF[complete.cases(siteDF[ , c("temp")]),],
                          ziformula = ~1,
                          family = nbinom2)
@@ -398,6 +470,9 @@ glmm.ZInb.min.5.1.2 <- glmmTMB(BgBn_number ~ wlevel + survey +
 # Drop temp
 glmm.ZInb.min.5.1.3 <- glmmTMB(BgBn_number ~ wlevel + type + survey +
                           (1|shehia/site), 
+                         contrasts=list(wlevel="contr.sum", 
+                                        type="contr.sum",
+                                        survey="contr.sum"),
                          data=siteDF[complete.cases(siteDF[ , c("temp")]),],
                          ziformula = ~1,
                          family = nbinom2)
@@ -414,12 +489,12 @@ lrtest(glmm.ZInb.min.5.1, glmm.ZInb.min.5.1.3)
 AIC(glmm.ZInb.min.5.1, glmm.ZInb.min.5.1.1, glmm.ZInb.min.5.1.2, glmm.ZInb.min.5.1.3)
 ```
 
-Likelihood ratio tests revealed that the model, in which "wlevel" was dropped from the count data model (glmm.ZInb.min.5.2) gave an associated p-value of 0.8057 and the lowest AIC (1735.668). Therefore, we also drop "wlevel", making our final model glmm.ZInb.min.5.1.1
+Likelihood ratio tests revealed that the model, in which "wlevel" was dropped from the count data model (glmm.ZInb.min.5.1.1) gave an associated p-value of 0.8057 and the lowest AIC (1735.668). Therefore, we also drop "wlevel", making our final model glmm.ZInb.min.5.1.1. 
 
 
 
 
-## Test spatiotemporal autocorrelation. 
+## Test for autocorrelation
 Test whether there is evidence for spatial or temporal autocorrelation. 
 
 ### Temporal autocorrelation 
@@ -427,11 +502,14 @@ Test whether there is evidence for spatial or temporal autocorrelation.
 Here we test for temporal autocorrelation using Julian dates; hence, assuming that day within a year is a key factor whilst the year itself isn't. The data used here was collected over two years (2017 and 2018) which **TOM** do you know whehther they were somewhat similar or at least not extremely different wether-wise? 
 ```{r glmm.ZInb.min.5.1.1-autocorrelation-temp, cache=TRUE, message=FALSE}
 require(DHARMa)
+require(glmmTMB)
 
 ### Refit final model
 glmm.ZInb.min.5.1.1 <- glmmTMB(BgBn_number ~ type + survey +
-                         arm::rescale(temp) + 
+                         temp + 
                           (1|shehia/site), 
+                         contrasts=list(type="contr.sum",
+                                        survey="contr.sum"),
                          data=siteDF[complete.cases(siteDF[ , c("temp")]),],
                          ziformula = ~1,
                          family = nbinom2)
@@ -455,16 +533,16 @@ year(mydata$survey_date2) <- 2017
 mydata$myjulian <- julian(mydata$survey_date2, origin = as.Date("2017-01-01"))
 
 
-res = simulateResiduals(glmm.ZInb.min.5.1.1)
+res <- simulateResiduals(glmm.ZInb.min.5.1.1)
 
-require(glmmTMB)
 # testing grouped residuals 
-res = recalculateResiduals(res, group = mydata$myjulian)
-testTemporalAutocorrelation(res, time = unique(mydata$myjulian))
+res <- recalculateResiduals(res, group <- mydata$myjulian)
+testTemporalAutocorrelation(res, time <- unique(mydata$myjulian))
 ```
 
 We get a p-value greater than 0.05 and can therefore reject the alternative hypothesis (true autocorrelation is not 0) and assume that our "survey" variable satisfactory accounts for any temporal autocorrelation.  
 
+### Spatial autocorrelation 
 
 ```{r glmm.ZInb.min.5.1.1-autocorrelation-spatial, cache=TRUE, message=FALSE}
 ## Spatial
@@ -495,22 +573,13 @@ We get a p-value greater than 0.05 and can therefore reject the alternative hypo
 ## Results
 
 ### Overview
-```{r glmm.ZInb.min.5.1.1-Overview, cache=TRUE, eval=FALSE}
-require(car)
+First, we look at the summary of our model and then use a type III Wald chisquare test to test whether any of the explanatory variables affect the number of *Bulinus* individuals collected per survey. Thereafter, we plot the effects of the explanatory variables before going through them one by one (below). 
+```{r glmm.ZInb.min.5.1.1-Overview, cache=TRUE, message=FALSE, warning=FALSE}
 require(glmmTMB)
-require(emmeans)
+require(car)
 require(effects)
-require(multcomp)
-require(MuMIn)
-require(DHARMa)
-require(broom)
-require(broom.mixed)
-require(dotwhisker)
-require(ggplot2)
-require(texreg)
-require(xtable)
 
-
+summary(glmm.ZInb.min.5.1.1)
 
 car::Anova(glmm.ZInb.min.5.1.1, type="III")
 
@@ -519,53 +588,56 @@ if (effects_ok) {
 (ae <- allEffects(glmm.ZInb.min.5.1.1))
 plot(ae)
 }
-effects::Effect("type", glmm.ZInb.min.5.1.1)
-(ae <- allEffects(glmm.ZInb.min.5.1.1))
-plot(ae)
-
-require(effects)
-plot(allEffects(glmm.ZInb.min.5.1.1))
-
-plot(predictorEffects(glmm.ZInb.min.5.1.1, ~ type), axes=list(grid=TRUE))
-
-summary(glmm.ZInb.min.5.1.1)
 ```
 \n
 \n
 
-#### Temperature
-**temp**: Among the temperatures tested here (range: 22.33-37.40C) increasing temperatures have a statistically significant negative effect on snail abundance. After back-transforming, (exp(-0.17426) = 0.8400784; exp((exp(-0.17426+0.08534))-0.8400784) = 0.0748404), the effect of temperature on snial abundnace is such that with every one degree increase in temperature, a survey will on average have 0.8400784 (+-0.0748404) snails, i.e. on average -15.99552% (+-8.908729%) snails with every one degree C increase in temperature *(these were caclated as follows: (exp(-0.17426)-1)x100, and (exp(0.08534)-1)x100)* 
+
+**TOM** Recall that this is a mixture model! 
+The summary shows that:
+* The logistic model for the false zeros is statistically significant (p=4.01e-07)  
+* All Estimated slopes, SDs, z values and p values of the summary should be presented somewhere (the Zero-inflation model intercept is that of the logistic model)  
+* The overdispersion parameter value should be included in publication  
+
+
+The type III Wald chisquare test shows:
+* type and survey effect the number of snails collected whilst temperature doesn't  
+
+
+
+### Temperature
+The effect plots show that there appears to be a negative effect on snail numbers with increasing temperatures but this is not statistically significant (X2 = 2.4106, df = 1, p = 0.120) within the range and with the data used here
 \n
 \n
 
 
 
-
-#### Water level
-**wlevel**: The effect of water level on snail abundance is statistically significantly linear and negative (since the wlevel.L term is significant whilst the wlevel.Q term (water level quadratic) is not). I.e. the effect of water level on snail abundance follows this equation: exp(8.48248) + wlevel.L x 0.3626526 (that last number is from exp(-1.01431)). In other words, ON AVERAGE, there is a -63.73474% ((exp(-1.01431)-1)*100) DECREASE FROM "1" to "2", and from "2" to "3". HOWEVER, although the model says that is a statistically significant negative trend, snail abundance is not statistically different between the three water level factors tested here (cos its ecology and varies etc etc). See that SEs and Confidence limits overlap below. Not a problem tho because overall, you know that there is a statistically significant negative trends going from "1" to "2" to "3" :) 
-\n
-\n
-```{r glmm.nb.min.3-wlevel, cache=TRUE, eval=FALSE}
+### Type
+The effect of type on snail abundance is statistically significant (X2 = 14.8, df = 3, p = 0.002)! The predicted responses are that ponds in type LD areas would on average have 0.881 snails, whilst HNR, HD and LNR areas would have 61.5, 40.7 and 33.8 snails (**TOM** do these numbers sound reasonable?!?!). A post-hoc pairwise Tukey Contrast test shows that there is no statistically significant difference between HNR, HD and LNR areas, whilst all three aforementioned area types are statistically different (have more snails) than LD areas. 
+```{r glmm.ZInb.min.5.1.1-type, cache=TRUE}
 require(emmeans)
-emmeans(glmm.ZInb.min.5.1.1, c("wlevel"), data = siteDF, type = "response")
+require(multcomp)
+
+emmeans(glmm.ZInb.min.5.1.1, c("type"), data = siteDF[complete.cases(siteDF[ , c("temp")]),], type = "response")
+
+tukeyType <- glht(glmm.ZInb.min.5.1.1, linfct = mcp(type = "Tukey"))
+summary(tukeyType)
 ```
-\n
-\n
 
-#### Type
-**Type**: The effect of type on snail abundance is statistically significantly negatively linear AND negatively quadratic! (since the Type.L and Type.Q terms are significant). In other words, going from "HNR" to "HD" to "LNR" to "LD", snail abindance decreases and this decrease accelerates at a certain point (thus the significant quadratic term). It is obvious from the plots above and when comparing individual factor levels (see below) that "HNR", "HD" and "LNR" are not statistically different from each other BUT "LD" has lower snail abundance than any of the other three "types" and its statistically significant in terms of non-overlapping SEs/CLs. 
-```{r glmm.nb.min.3-type, cache=TRUE, eval=FALSE}
+
+### Survey
+
+The effect of survey on snail abundance is statistically significant (X2 = 16.2, df = 3, p = 0.001)! The predicted responses are that on average, 38.2, 15.9, 9.7 and 12.6 snails were present in ponds during surevy S1, S2, S3 and S4, respectively (**TOM** do these numbers sound reasonable?!?! Remember that we now have accounted for snailes you did not collect but were present with the model formulation). A post-hoc pairwise Tukey Contrast test shows that there is no statistically significant difference between survey 2, 3 and 4, whilst all three aforementioned surveys are statistically different (have fewer snails) than survey 1. 
+
+\n
+```{r glmm.ZInb.min.5.1.1-survey, cache=TRUE}
 require(emmeans)
-emmeans(glmm.ZInb.min.5.1.1, c("type"), data = siteDF, type = "response")
-```
+require(multcomp)
 
-
-#### Survey
-**Survey**: survey 2, 3 and 4 are stat diff from survey 1 according to the mdoel (see summary(glmm.nb.min.3) above) and thre three surveys have FEWER snails than survey 1. Comparing survey 2, 3 and 4 (see SEs and CLs below) it's cear that there is not a statistically significant difference between snail abundance among suveys 2, 3 and 4 (which is in line with top plot too).
-\n
-```{r glmm.nb.min.3-survey, cache=TRUE, eval=FALSE}
-require(emmeans)
 emmeans(glmm.ZInb.min.5.1.1, c("survey"), data = siteDF[complete.cases(siteDF[ , c("temp")]),], type = "response")
+
+tukeySurvey <- glht(glmm.ZInb.min.5.1.1, linfct = mcp(survey = "Tukey"))
+summary(tukeySurvey)
 ```
 
 

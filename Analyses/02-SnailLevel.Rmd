@@ -1,0 +1,462 @@
+---
+title: "02-SnailLevel"
+author: "Galina M. Jönsson"
+date: "16/10/2020"
+output: html_document
+---
+
+## The data
+
+Load and tidy the data. These analyses are based on the data sets, each of which contains data on different levels: snail-level, survey-level and Shehia-level. We therefore start by loading each one in turn and assigning all variables within a data set the correct class.
+
+```{r load-data, cache=TRUE, warning=FALSE, message=FALSE}
+#############################################################################
+####### Snail-level data set - test result for infection per snail ##########
+#############################################################################
+
+# Load data set
+snailRaw <- read.csv("../Data/snail_data_xeno_v1.csv")
+
+## Assign variables appropriate classes
+snailRaw$`snail_id`<-as.factor(snailRaw$`snail_id`)
+snailRaw$`site`<-as.factor(snailRaw$`site`)
+snailRaw$`survey`<-as.factor(snailRaw$`survey`)
+snailRaw$`shehia`<-as.factor(snailRaw$`shehia`)
+snailRaw$`type`<-as.factor(snailRaw$`type`)
+snailRaw$`zest_arm`<-as.factor(snailRaw$`zest_arm`)
+snailRaw$`survey_site`<-as.factor(snailRaw$`survey_site`)
+snailRaw$`survey_shehia`<-as.factor(snailRaw$`survey_shehia`)
+snailRaw$`wbtype`<-as.factor(snailRaw$`wbtype`)
+snailRaw$`wbtype2`<-as.factor(snailRaw$`wbtype2`)
+snailRaw$`assumed_Bulinus_spp_site`<-as.factor(snailRaw$`assumed_Bulinus_spp_site`)
+snailRaw$`ITS-1-2-F_outcome`<-as.factor(snailRaw$`ITS_1_2_F_outcome`)
+snailRaw$prepat_schisto_sp<-as.factor(snailRaw$prepat_schisto_sp)
+snailRaw$prepat_Sh<-as.factor(snailRaw$prepat_Sh)
+snailRaw$prepat_Sb<-as.factor(snailRaw$prepat_Sb)
+snailRaw$prepat_ShSb<-as.factor(snailRaw$prepat_ShSb)
+snailRaw$prepat_Schisto<-as.factor(snailRaw$prepat_Schisto)
+snailRaw$Sh_all<-as.character(snailRaw$Sh_all)
+snailRaw$Sh_all<-as.integer(snailRaw$Sh_all)
+snailRaw$Sb_all<-as.character(snailRaw$Sb_all)
+snailRaw$Sb_all<-as.integer(snailRaw$Sb_all)
+snailRaw$'ITSF_2_outcome'<-as.factor(snailRaw$'ITSF_2_outcome')
+snailRaw$'conf_Bulinus_sp'<-as.factor(snailRaw$'conf_Bulinus_sp')
+snailRaw$'Bulinus_haplo'<-as.factor(snailRaw$'Bulinus_haplo')
+snailRaw$patent_Sh<-as.factor(snailRaw$patent_Sh)
+snailRaw$patent_Sb<-as.factor(snailRaw$patent_Sb)
+snailRaw$patent_Schisto<-as.factor(snailRaw$patent_Schisto)
+
+
+
+
+
+
+#############################################################################
+#### Survey-level data set - environmental variables + human activities #####
+#############################################################################
+
+# Load data set
+surveyRaw <- read.csv("../Data/survey_site_data_xeno_v1.csv")
+
+## Assign variables appropriate classes
+surveyRaw$`site`<-as.factor(surveyRaw$`USI`)
+surveyRaw$`survey`<-as.factor(surveyRaw$`survey`)
+surveyRaw$`shehia`<-as.factor(surveyRaw$`shehia`)
+surveyRaw$`type`<-as.factor(surveyRaw$`type`)
+surveyRaw$`zest_arm`<-as.factor(surveyRaw$`zest_arm`)
+surveyRaw$`survey_site`<-as.factor(surveyRaw$`survey_site`)
+surveyRaw$`survey_shehia`<-as.factor(surveyRaw$`survey_shehia`)
+surveyRaw$`wbtype`<-as.factor(surveyRaw$`wbtype`)
+surveyRaw$`wbtype2`<-as.factor(surveyRaw$`wbtype2`)
+surveyRaw$`wlevel`<-as.factor(surveyRaw$`wlevel`)
+surveyRaw$`BgBn_pres`<-as.factor(surveyRaw$`BgBn_pres`)
+surveyRaw$`cerc_sp`<-as.factor(surveyRaw$`cerc_sp`)
+surveyRaw$`flow`<-as.factor(surveyRaw$`flow`)
+surveyRaw$`depth`<-as.factor(surveyRaw$`depth`)
+surveyRaw$`Bfor_pres`<-as.factor(surveyRaw$`Bfor_pres`)
+surveyRaw$`Lym_pres`<-as.factor(surveyRaw$`Lym_pres`)
+surveyRaw$`Mel_pres`<-as.factor(surveyRaw$`Mel_pres`)
+surveyRaw$`Cleo_pres`<-as.factor(surveyRaw$`Cleo_pres`)
+surveyRaw$`Pila_pres`<-as.factor(surveyRaw$`Pila_pres`)
+surveyRaw$`Lan_pres`<-as.factor(surveyRaw$`Lan_pres`)
+surveyRaw$`Thiara_pres`<-as.factor(surveyRaw$`Thiara_pres`)
+surveyRaw$`other_snail`<-as.factor(surveyRaw$`other_snail`)
+surveyRaw$`Lilies`<-as.factor(surveyRaw$`Lilies`)
+surveyRaw$`rushes`<-as.factor(surveyRaw$`rushes`)
+surveyRaw$`rice`<-as.factor(surveyRaw$`rice`)
+surveyRaw$waterhyacinth<-as.factor(surveyRaw$waterhyacinth)
+surveyRaw$palmfronds<-as.factor(surveyRaw$palmfronds)
+surveyRaw$sedge<-as.factor(surveyRaw$sedge)
+surveyRaw$grass<-as.factor(surveyRaw$grass)
+surveyRaw$banana<-as.factor(surveyRaw$banana)
+surveyRaw$veg_any<-as.factor(surveyRaw$veg_any)
+surveyRaw$mud<-as.factor(surveyRaw$mud)
+surveyRaw$sand<-as.factor(surveyRaw$sand)
+surveyRaw$rock<-as.factor(surveyRaw$rock)
+surveyRaw$concrete<-as.factor(surveyRaw$concrete)
+surveyRaw$roots<-as.factor(surveyRaw$roots)
+surveyRaw$Litter<-as.factor(surveyRaw$Litter)
+surveyRaw$`Dead.wood`<-as.factor(surveyRaw$`Dead.wood`)
+surveyRaw$wudu<-as.factor(surveyRaw$wudu)
+surveyRaw$bathing<-as.factor(surveyRaw$bathing)
+surveyRaw$clothes<-as.factor(surveyRaw$clothes)
+surveyRaw$dishes<-as.factor(surveyRaw$dishes)
+surveyRaw$carbike<-as.factor(surveyRaw$carbike)
+surveyRaw$collectingwater<-as.factor(surveyRaw$collectingwater)
+surveyRaw$swimmingplaying<-as.factor(surveyRaw$swimmingplaying)
+surveyRaw$fishing<-as.factor(surveyRaw$fishing)
+surveyRaw$Ricecult<-as.factor(surveyRaw$Ricecult)
+surveyRaw$otherfarming<-as.factor(surveyRaw$otherfarming)
+surveyRaw$sanitation<-as.factor(surveyRaw$sanitation)
+surveyRaw$water_contact<-as.factor(surveyRaw$water_contact)
+surveyRaw$cow<-as.factor(surveyRaw$cow)
+surveyRaw$goat<-as.factor(surveyRaw$goat)
+surveyRaw$donkey<-as.factor(surveyRaw$donkey)
+surveyRaw$ungulate<-as.factor(surveyRaw$ungulate)
+
+
+
+
+#############################################################################
+###### Shehia-level data set - infection rates among school children ########
+#############################################################################
+
+# Load data set
+shehiaRaw <- read.csv("../Data/shehia_school_data_v1.csv")
+
+## Assign variables appropriate classes
+shehiaRaw$`shehia`<-as.factor(shehiaRaw$`shehia`)
+shehiaRaw$`type`<-as.factor(shehiaRaw$`type`)
+shehiaRaw$`zest_arm`<-as.factor(shehiaRaw$`zest_arm`)
+
+```
+
+
+Now we merge the data sets to get one data set where each individual *Bolinus* snail (snailRaw) also has information on environmental variables from where it was collected (surveyRaw) and infection rates among school children in the Shehia from where it was collected (shehiaRaw). Finally, we tidy the resulting data set. 
+```{r MergeTidy-data, cache=TRUE, warning=FALSE, message=FALSE}
+
+#### Merging data sets for further analysis ####
+
+## merge snail_data with survey_site data ##
+
+# perform merge
+TempSnail1 <- merge(snailRaw, surveyRaw, by.x="survey_site", by.y="survey_site", all.x=TRUE)
+# write csv
+#write.csv(mdf1, "../Data/mdf1.csv")
+
+## merge TempSnail data with shehia (schistosomiasis prevalence) data 
+# perform merge
+TempSnail1 <-merge(TempSnail2, shehiaRaw, by.x="shehia.x", by.y="shehia", all.x=TRUE)
+#write.csv(mdf2, "../Data/mdf2.csv")
+
+#### KEEPING COLUMNS of interest FOR MODELS ####
+
+# created new df with only the columns of interest #
+
+df = mdf2[c("shehia.x", "survey_site", "snail_id", "site.x", "survey.x", "type.x", "zest_arm.x", 
+            "survey_shehia.x", "wbtype.x", "wbtype2.x", "lat_Cor", "lon_Cor", "assumed_Bulinus_spp_site", 
+            "Sh_all", "Sb_all", "wlevel", "BgBn_number", 
+            "temp", "ph", "cond", "tds", "do", "sal", "flow", "depth", 
+            "Bfor_pres", "Lym_pres", "Mel_pres", "Cleo_pres", "Pila_pres", "Lan_pres", "Thiara_pres", 
+            "other_snail", 
+            "Lilies", "rushes", "rice", "waterhyacinth", "palmfronds", "sedge", "grass", "banana", 
+            "veg_any", "mud", "sand", "rock", "concrete", "roots", "Litter", "Dead.wood", 
+            "wudu", "bathing", 
+            "clothes", "dishes", "carbike", "collectingwater", "swimmingplaying", "fishing", "Ricecult", 
+            "otherfarming", "sanitation", "water_contact",
+            "cow", "goat", "donkey", "ungulate",
+            "prev_2012", "prev_2013", "prev_2014", "prev_2015", "prev_2016",
+            "eggs_2012", "eggs_2013", "eggs_2014", "eggs_2015", "eggs_2016",
+            "prev_change_12_16", "eggs_change_12_16")]
+
+# also created a na.omit df, however can specifiy this in the models
+df.na <- na.omit(df)
+
+# also created a data set removing the 'low values' sites Mat12 Mat7 Wam7 Ole13 Waw5 Uku10 
+library(Hmisc)
+library(dplyr)
+df.na.rem1 <- filter(df.na, site.x != "Mat7")
+df.na.rem2 <- filter(df.na.rem1, site.x != "Mat12")
+df.na.rem3 <- filter(df.na.rem2, site.x != "Wam7")
+df.na.rem4 <- filter(df.na.rem3, site.x != "Ole13")
+df.na.rem5 <- filter(df.na.rem4, site.x != "Waw5")
+df.na.rem <- filter(df.na.rem5, site.x != "Uku10")
+
+
+# creating ordered variables for type and wlevel (as for other models)
+df.na.rem$type.x <- factor(df.na.rem$type.x, ordered = TRUE, 
+                                levels = c("HNR", "HD", "LNR", "LD"))
+df.na.rem$wlevel <- factor(df.na.rem$wlevel, ordered = TRUE, 
+                                levels = c("1", "2", "3", "4"))
+
+df.na.rem <- droplevels(df.na.rem)
+```
+
+
+### Final model
+
+```{r glmer1.17, message=FALSE, warning=FALSE, cache=TRUE}
+library(arm)
+
+df.na.glmer1.17 <- glmer(Sh_all ~ (1|shehia.x/site.x) +
+                           wlevel + temp + ph,
+                            data = df.na.rem, 
+                         family = binomial(link = "logit"),
+                         glmerControl("bobyqa"))
+
+
+AF1 <- allFit(df.na.glmer1.17, verbose=T)
+```
+
+
+
+
+#### Overview
+
+Chapter 7.4 of this https://bookdown.org/schmettow/NewStats/GLM.html was brilliant at explaining hot to interpret these outputs!!!!
+
+```{r (df.na.glmer1.17-Overview, cache=TRUE}
+require(effects)
+plot(allEffects(df.na.glmer1.17))
+summary(df.na.glmer1.17)
+```
+\n
+\n
+
+
+
+
+#### Water level
+**wlevel**: The effect of water level on whether snails are infected or not is statistically significantly positively linear AND negatively quadratic! (since the wlevel.L and wlevel.Q terms are significant). In other words, going from "1" to "2" to "3", the probability of snails being infected increases BUT due to the negative quadratic term, we know that the rate of increase in probability of infection decreases and becomes a negative trend at a certain point. From above plot, its  obvious that "2" has most infections, i.e. infection rate increases from "1" to "2" and decreases from "2" to "3". We can use the "emmeans" to get the estimated probability of snails being infected in each of the water level types and the function automatically back-transforms estimates for us. For instance, the probability of a snail being infected in water level "1" is 0.00132 (+-0.000732)/0.132% of snails are infected.
+```{r df.na.glmer1.17-wlevel, cache=TRUE}
+require(emmeans)
+emmeans(df.na.glmer1.17, c("wlevel"), data = df.na.rem, type = "response")
+```
+
+
+\n
+\n
+
+
+#### Temperature
+**temp**: Temperature has a statistically significant positive effect on whether snails are infected, i.e. with increasing temperatures snails are more likely ti be infected. Averaged over the different water levels, as temperature increases by one degree celsius, the odds of snails being infected increase by a factor of 1.249233 (exp(0.22253))/ increase by 24.9233% (+- 6.3564% (exp(0.22253+0.04963)-exp(0.22253)*100)).
+
+E.g. see below that at 27.5 degrees C, the probability of any given snail being infected is 0.00431; therefore, at 28.5 degrees, the odds of a snail being infected is 0.005384194 (0.00431*1.249233)
+\n
+```{r df.na.glmer1.17-temp, cache=TRUE}
+require(emmeans)
+emmeans(df.na.glmer1.17, c("temp"), data = df.na.rem, type = "response")
+exp(0.22253)
+```
+
+
+
+#### ph
+**pH**: ph has a statistically significant negative effect on whether snails are infected, i.e. with increasing ph snails are less likely to be infected. Averaged over the different water levels, as ph increases by one unit, the odds of snails being infected decrease by a factor of 0.4326224 (exp(-0.83789))/ decrease by 56.73776% (1-0.4326224 x 100).
+
+E.g. see below that at ph = 7.01, the probability of asnail being infected is 0.00431; therefore, at ph = 8.01, the odds of a snail being infected is 0.001864603 (0.00431*0.4326224)
+\n
+```{r df.na.glmer1.17-ph, cache=TRUE}
+require(emmeans)
+emmeans(df.na.glmer1.17, c("ph"), data = df.na.rem, type = "response")
+exp(-0.83789)*100
+```
+
+
+\n
+\n
+
+# Spatial autocorrelation
+\n
+\n
+
+
+```{r spatial-corr-snail-level, cache=TRUE, warning=FALSE, message=FALSE}
+require(gstat)
+require(lme4)
+require(sp)
+
+# Snail - gen test
+df1 <- read.csv("../Data/TempTom/snail_data_xeno_v1.csv")
+
+# Survey - environmetal variables + human activities
+df2 <- read.csv("../Data/TempTom/survey_site_data_xeno_v1.csv")
+
+# Region (Shehia) - schisto prevalence among school childern per region
+shehiaRaw <- read.csv("../Data/TempTom/shehia_school_data_v1.csv")
+
+## Set Snail variables as factors
+df1$`snail_id`<-as.factor(df1$`snail_id`)
+df1$`site`<-as.factor(df1$`site`)
+df1$`survey`<-as.factor(df1$`survey`)
+df1$`shehia`<-as.factor(df1$`shehia`)
+df1$`type`<-as.factor(df1$`type`)
+df1$`zest_arm`<-as.factor(df1$`zest_arm`)
+df1$`survey_site`<-as.factor(df1$`survey_site`)
+df1$`survey_shehia`<-as.factor(df1$`survey_shehia`)
+df1$`wbtype`<-as.factor(df1$`wbtype`)
+df1$`wbtype2`<-as.factor(df1$`wbtype2`)
+df1$`assumed_Bulinus_spp_site`<-as.factor(df1$`assumed_Bulinus_spp_site`)
+df1$`ITS-1-2-F_outcome`<-as.factor(df1$`ITS_1_2_F_outcome`)
+df1$prepat_schisto_sp<-as.factor(df1$prepat_schisto_sp)
+df1$prepat_Sh<-as.factor(df1$prepat_Sh)
+df1$prepat_Sb<-as.factor(df1$prepat_Sb)
+df1$prepat_ShSb<-as.factor(df1$prepat_ShSb)
+df1$prepat_Schisto<-as.factor(df1$prepat_Schisto)
+df1$Sh_all<-as.character(df1$Sh_all)
+df1$Sh_all<-as.integer(df1$Sh_all)
+df1$Sb_all<-as.character(df1$Sb_all)
+df1$Sb_all<-as.integer(df1$Sb_all)
+df1$'ITSF_2_outcome'<-as.factor(df1$'ITSF_2_outcome')
+## have excluded the seq code columns for now could remove ##
+df1$'conf_Bulinus_sp'<-as.factor(df1$'conf_Bulinus_sp')
+df1$'Bulinus_haplo'<-as.factor(df1$'Bulinus_haplo')
+df1$patent_Sh<-as.factor(df1$patent_Sh)
+df1$patent_Sb<-as.factor(df1$patent_Sb)
+df1$patent_Schisto<-as.factor(df1$patent_Schisto)
+
+# NB can check that variables converted to factor by #
+print(is.factor(df1$snail_id))
+
+## Set Site Survey variables as factors
+df2$`site`<-as.factor(df2$`USI`)
+df2$`survey`<-as.factor(df2$`survey`)
+df2$`shehia`<-as.factor(df2$`shehia`)
+df2$`type`<-as.factor(df2$`type`)
+df2$`zest_arm`<-as.factor(df2$`zest_arm`)
+df2$`survey_site`<-as.factor(df2$`survey_site`)
+df2$`survey_shehia`<-as.factor(df2$`survey_shehia`)
+df2$`wbtype`<-as.factor(df2$`wbtype`)
+df2$`wbtype2`<-as.factor(df2$`wbtype2`)
+df2$`wlevel`<-as.factor(df2$`wlevel`)
+df2$`BgBn_pres`<-as.factor(df2$`BgBn_pres`)
+df2$`cerc_sp`<-as.factor(df2$`cerc_sp`)
+df2$`flow`<-as.factor(df2$`flow`)
+df2$`depth`<-as.factor(df2$`depth`)
+df2$`Bfor_pres`<-as.factor(df2$`Bfor_pres`)
+df2$`Lym_pres`<-as.factor(df2$`Lym_pres`)
+df2$`Mel_pres`<-as.factor(df2$`Mel_pres`)
+df2$`Cleo_pres`<-as.factor(df2$`Cleo_pres`)
+df2$`Pila_pres`<-as.factor(df2$`Pila_pres`)
+df2$`Lan_pres`<-as.factor(df2$`Lan_pres`)
+df2$`Thiara_pres`<-as.factor(df2$`Thiara_pres`)
+df2$`other_snail`<-as.factor(df2$`other_snail`)
+df2$`Lilies`<-as.factor(df2$`Lilies`)
+df2$`rushes`<-as.factor(df2$`rushes`)
+df2$`rice`<-as.factor(df2$`rice`)
+df2$waterhyacinth<-as.factor(df2$waterhyacinth)
+df2$palmfronds<-as.factor(df2$palmfronds)
+df2$sedge<-as.factor(df2$sedge)
+df2$grass<-as.factor(df2$grass)
+df2$banana<-as.factor(df2$banana)
+df2$veg_any<-as.factor(df2$veg_any)
+df2$mud<-as.factor(df2$mud)
+df2$sand<-as.factor(df2$sand)
+df2$rock<-as.factor(df2$rock)
+df2$concrete<-as.factor(df2$concrete)
+df2$roots<-as.factor(df2$roots)
+df2$Litter<-as.factor(df2$Litter)
+df2$`Dead.wood`<-as.factor(df2$`Dead.wood`)
+df2$wudu<-as.factor(df2$wudu)
+df2$bathing<-as.factor(df2$bathing)
+df2$clothes<-as.factor(df2$clothes)
+df2$dishes<-as.factor(df2$dishes)
+df2$carbike<-as.factor(df2$carbike)
+df2$collectingwater<-as.factor(df2$collectingwater)
+df2$swimmingplaying<-as.factor(df2$swimmingplaying)
+df2$fishing<-as.factor(df2$fishing)
+df2$Ricecult<-as.factor(df2$Ricecult)
+df2$otherfarming<-as.factor(df2$otherfarming)
+df2$sanitation<-as.factor(df2$sanitation)
+df2$water_contact<-as.factor(df2$water_contact)
+df2$cow<-as.factor(df2$cow)
+df2$goat<-as.factor(df2$goat)
+df2$donkey<-as.factor(df2$donkey)
+df2$ungulate<-as.factor(df2$ungulate)
+
+
+## Set shehia school as factors
+shehiaRaw$`shehia`<-as.factor(shehiaRaw$`shehia`)
+shehiaRaw$`type`<-as.factor(shehiaRaw$`type`)
+shehiaRaw$`zest_arm`<-as.factor(shehiaRaw$`zest_arm`)
+
+
+#### Merging datasets for further analysis ####
+
+## merge snail_data with survey_site data ##
+
+# perfrom merge
+merge(df1, df2, by.x="survey_site", by.y="survey_site", all.x=TRUE) -> mdf1
+# write csv
+write.csv(mdf1, "../Data/TempTom/mdf1.csv")
+
+## merge mdf1 data with shehia (schistosomiasis prevalence) data 
+# perform merge
+merge(mdf1, df3, by.x="shehia.x", by.y="shehia", all.x=TRUE) -> mdf2
+write.csv(mdf2, "../Data/TempTom//mdf2.csv")
+
+#### KEEPING COLUMNS of interest FOR FINAL MODEL ####
+
+# created new df with only the columns of interest #
+
+df = mdf2[c("shehia.x", "site.x", "lat_Cor", "lon_Cor", 
+            "Sh_all", "wlevel", "temp", "ph")]
+
+# also created a na.omit df, however can specifiy this in the models
+df.na <- na.omit(df)
+
+# also created a data set removing the 'low values' sites Mat12 Mat7 Wam7 Ole13 Waw5 Uku10 
+library(Hmisc)
+library(dplyr)
+df.na.rem1 <- filter(df.na, site.x != "Mat7")
+df.na.rem2 <- filter(df.na.rem1, site.x != "Mat12")
+df.na.rem3 <- filter(df.na.rem2, site.x != "Wam7")
+df.na.rem4 <- filter(df.na.rem3, site.x != "Ole13")
+df.na.rem5 <- filter(df.na.rem4, site.x != "Waw5")
+df.na.rem <- filter(df.na.rem5, site.x != "Uku10")
+library(effects)
+
+# creating ordered variables for wlevel (as for other models)
+df.na.rem$wlevel <- factor(df.na.rem$wlevel, ordered = TRUE, 
+                                levels = c("1", "2", "3", "4"))
+
+# run final model 
+library(arm)
+library(lme4)
+df.na.glmer1.17 <- glmer(Sh_all ~ (1|shehia.x/site.x) +
+                           wlevel + temp + ph,
+                            data = df.na.rem, 
+                         family = binomial(link = "logit"),
+                         glmerControl("bobyqa"))
+
+df.na.glmer1.17 <- glmer(Sh_all ~ (1|shehia.x/site.x) +
+                           wlevel + temp + ph,
+                            data = df.na.rem, 
+                         family = binomial(link = "logit"),
+                         glmerControl("bobyqa"))
+
+
+# Find residuals from response variable of final model
+E <- residuals(df.na.glmer1.17, type = "response")
+#E <- resid(df.na.glmer1.17)
+
+snailDF_res <- data.frame(E, df.na.rem$lat_Cor, df.na.rem$lon_Cor)
+
+coordinates(snailDF_res) <- c("df.na.rem.lat_Cor", "df.na.rem.lon_Cor")
+
+bubble(snailDF_res, "E", col = c("black", "grey"),
+       main = "Residuals", xlab = "X-coordinates",
+       ylab = "Y-coordinates")
+
+Vario1 <- variogram(E ~ 1, snailDF_res)
+plot(Vario1)
+```
+
+
+
+
+###!!!! USE Residuals() from BinomTools package (not available for my curr. R version )
+
+
+
+

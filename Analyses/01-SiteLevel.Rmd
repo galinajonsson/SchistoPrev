@@ -16,9 +16,12 @@ output:
 
 
 ## The data
+
+Load and tidy the data
+
 ```{r loadNclean-data}
 ### load data
-siteDF <- read.csv("../Data/TempTom/df2_new.csv")
+siteDF <- read.csv("../Data/df2_new.csv")
 
 
 

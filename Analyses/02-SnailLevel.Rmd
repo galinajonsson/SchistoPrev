@@ -13,6 +13,7 @@ output:
 
 Load and tidy the data. These analyses are based on the data sets, each of which contains data on different levels: snail-level, survey-level and Shehia-level. We therefore start by loading each one in turn and assigning all variables within a data set the correct class.
 
+### Raw data
 ```{r load-data, cache=TRUE, warning=FALSE, message=FALSE}
 #############################################################################
 ####### Snail-level data set - test result for infection per snail ##########
@@ -136,65 +137,248 @@ shehiaRaw$`zest_arm`<-as.factor(shehiaRaw$`zest_arm`)
 ```
 
 
-Now we merge the data sets to get one data set where each individual *Bolinus* snail (snailRaw) also has information on environmental variables from where it was collected (surveyRaw) and infection rates among school children in the Shehia from where it was collected (shehiaRaw). Finally, we tidy the resulting data set. 
+### Tidy raw data
+Now we merge the data sets to get one data set where each individual *Bulinus* individual (snailRaw) also has information on environmental variables from where it was collected (surveyRaw) and infection rates among school children in the Shehia from where it was collected (shehiaRaw). Finally, we tidy the resulting data set. 
 ```{r MergeTidy-data, cache=TRUE, warning=FALSE, message=FALSE}
 
-#### Merging data sets for further analysis ####
 
-## merge snail_data with survey_site data ##
+### Merge snailRaw and surveyRaw based on "survey_site" and keep all observations in snailRaw
+snailDFtemp1 <- merge(snailRaw, surveyRaw, by.x="survey_site", by.y="survey_site", all.x=TRUE)
 
-# perform merge
-TempSnail1 <- merge(snailRaw, surveyRaw, by.x="survey_site", by.y="survey_site", all.x=TRUE)
-# write csv
-#write.csv(mdf1, "../Data/mdf1.csv")
+# write.csv(snailDFtemp1, "../Data/mdf1.csv")
 
-## merge TempSnail data with shehia (schistosomiasis prevalence) data 
-# perform merge
-TempSnail2 <-merge(TempSnail1, shehiaRaw, by.x="shehia.x", by.y="shehia", all.x=TRUE)
-#write.csv(mdf2, "../Data/mdf2.csv")
-
-#### KEEPING COLUMNS of interest FOR MODELS ####
-
-# created new df with only the columns of interest #
-
-df <- TempSnail2[c("shehia.x", "survey_site", "snail_id", "site.x", "survey.x", "type.x", "zest_arm.x", 
-            "survey_shehia.x", "wbtype.x", "wbtype2.x", "lat_Cor", "lon_Cor", "assumed_Bulinus_spp_site", 
-            "Sh_all", "Sb_all", "wlevel", "BgBn_number", 
-            "temp", "ph", "cond", "tds", "do", "sal", "flow", "depth", 
-            "Bfor_pres", "Lym_pres", "Mel_pres", "Cleo_pres", "Pila_pres", "Lan_pres", "Thiara_pres", 
-            "other_snail", 
-            "Lilies", "rushes", "rice", "waterhyacinth", "palmfronds", "sedge", "grass", "banana", 
-            "veg_any", "mud", "sand", "rock", "concrete", "roots", "Litter", "Dead.wood", 
-            "wudu", "bathing", 
-            "clothes", "dishes", "carbike", "collectingwater", "swimmingplaying", "fishing", "Ricecult", 
-            "otherfarming", "sanitation", "water_contact",
-            "cow", "goat", "donkey", "ungulate",
-            "prev_2012", "prev_2013", "prev_2014", "prev_2015", "prev_2016",
-            "eggs_2012", "eggs_2013", "eggs_2014", "eggs_2015", "eggs_2016",
-            "prev_change_12_16", "eggs_change_12_16")]
-
-# also created a na.omit df, however can specifiy this in the models
-df.na <- na.omit(df)
-
-# also created a data set removing the 'low values' sites Mat12 Mat7 Wam7 Ole13 Waw5 Uku10 
-library(Hmisc)
-library(dplyr)
-df.na.rem1 <- filter(df.na, site.x != "Mat7")
-df.na.rem2 <- filter(df.na.rem1, site.x != "Mat12")
-df.na.rem3 <- filter(df.na.rem2, site.x != "Wam7")
-df.na.rem4 <- filter(df.na.rem3, site.x != "Ole13")
-df.na.rem5 <- filter(df.na.rem4, site.x != "Waw5")
-df.na.rem <- filter(df.na.rem5, site.x != "Uku10")
+# Double check we haven't lost/duplicated any observations
+nrow(snailRaw) == nrow(snailDFtemp1) 
 
 
-# creating ordered variables for type and wlevel (as for other models)
-df.na.rem$type.x <- factor(df.na.rem$type.x, ordered = TRUE, 
+
+### Merge snailDFtemp1 and shehiaRaw based on shehia and keep all observations in snailRaw/snailDFtemp1
+snailDFtemp2 <-merge(snailDFtemp1, shehiaRaw, by.x="shehia.x", by.y="shehia", all.x=TRUE)
+
+#write.csv(snailDFtemp2, "../Data/mdf2.csv")
+
+# Double check we haven't lost/duplicated any observations
+nrow(snailRaw) == nrow(snailDFtemp2) 
+
+
+
+
+
+### Subset columns of interest and create a new data frame with only these columns
+snailDF <- snailDFtemp2[c("shehia.x", "survey_site", "snail_id", 
+                        "site.x", "survey.x", "type.x",
+                        "zest_arm.x", "survey_shehia.x", "wbtype.x", 
+                        "wbtype2.x", "lat_Cor", "lon_Cor",
+                        "assumed_Bulinus_spp_site", "Sh_all", "Sb_all", 
+                        "wlevel", "BgBn_number", "temp", 
+                        "ph", "cond", "tds", 
+                        "do", "sal", "flow", 
+                        "depth", "Bfor_pres", "Lym_pres", 
+                        "Mel_pres", "Cleo_pres", "Pila_pres", 
+                        "Lan_pres", "Thiara_pres", "other_snail", 
+                        "Lilies", "rushes", "rice", 
+                        "waterhyacinth", "palmfronds", "sedge", 
+                        "grass", "banana", "veg_any", 
+                        "mud", "sand", "rock", 
+                        "concrete", "roots", "Litter", 
+                        "Dead.wood", "wudu", "bathing", 
+                        "clothes", "dishes", "carbike", 
+                        "collectingwater", "swimmingplaying", 
+                        "fishing", "Ricecult", "otherfarming", 
+                        "sanitation", "water_contact", "cow", 
+                        "goat", "donkey", "ungulate",
+                        "prev_2012", "prev_2013", "prev_2014", 
+                        "prev_2015", "prev_2016", "eggs_2012", 
+                        "eggs_2013", "eggs_2014", "eggs_2015", 
+                        "eggs_2016", "prev_change_12_16", "eggs_change_12_16",
+                        "survey_date")]
+
+
+
+
+### Rename certain variables for convenience
+require(dplyr)
+snailDF <- snailDF %>% 
+  rename(
+    shehia = shehia.x, 
+    site = site.x, 
+    survey = survey.x, 
+    type.x = type.x, 
+    zest_arm = zest_arm.x, 
+    survey_shehia = survey_shehia.x, 
+    wbtype = wbtype.x,
+    wbtype2 = wbtype2.x
+    )
+
+
+# As we will use "site" nested in "shehia" as random variables, we will remove any sites with six or fewer snails. See the number of snails in each site commented next to the site name below
+#library(Hmisc)
+temp <- nrow(snailDF)
+snailDF <- filter(snailDF, site != "Mat7") # 3
+snailDF <- filter(snailDF, site != "Mat12") # 3
+snailDF <- filter(snailDF, site != "Wam7") # 3
+snailDF <- filter(snailDF, site != "Ole13") # 6
+snailDF <- filter(snailDF, site != "Waw5") # 5
+snailDF <- filter(snailDF, site != "Uku10") # 6
+
+# How many observations were removed?
+temp - nrow(snailDF)
+
+
+### Create ordered variables for type and wlevel
+snailDF$type <- factor(snailDF$type, ordered = TRUE, 
                                 levels = c("HNR", "HD", "LNR", "LD"))
-df.na.rem$wlevel <- factor(df.na.rem$wlevel, ordered = TRUE, 
+snailDF$wlevel <- factor(snailDF$wlevel, ordered = TRUE, 
                                 levels = c("1", "2", "3", "4"))
 
-df.na.rem <- droplevels(df.na.rem)
+
+
+
+### Also create a data frame where all observations have data for all above variables
+snailDF.na <- na.omit(snailDF)
+
+# How many observations were removed?
+nrow(snailDF) - nrow(snailDF.na)
+
+# Drop levels from both tidied data sets
+snailDF <- droplevels(snailDF)
+snailDF.na <- droplevels(snailDF.na)
 ```
+
+
+
+### Inspect response variable
+The response variable used in these analyses is "Sh_all", which denotes whether **TOM** fill in please. 
+
+As we will be preforming our model selection using the snailDF.na data set, we inspect its variables. 
+```{r respvar, cache=TRUE, message=FALSE}
+### How many **TOM** fill in please are **infected**? 
+table(snailDF.na$Sh_all)
+```
+
+97%, i.e. the majority, of tested individuals were not infected (5101), whilst 3% were (158). 
+
+
+### Test for collinearity between explanatory variables
+\n
+\n
+#### Explanatory variables of potential interest
+* **wlevel** -> water level    
+* **wbtype2** -> waterbody type: either permanent or temporary    
+* **syrvey** -> four surveys; corresponds to time of year; potentially correlated with wlevel and wbtype2    
+* **temp** -> water temperature   
+* **cond** -> conductivity; indirect measure of water chemistry   
+* **ph** -> potentially correlated with conductivity   
+* **type** -> human response to treatment; whether people got reinfected quickly or not; four categories    
+
+
+Potential collinearity between quantitative explanatory variables is tested using the Kendall rank coefficient to establish whether variables are statistically dependent. This test is non-parametric, i.e. does not rely on any assumptions on the distributions of the variables. Collinearity between qualitative and quantitative explanatory variables is visually examined using box plots. 
+```{r collinearity-explanVars-test, message=FALSE, warning=FALSE, cache=TRUE}
+require("PerformanceAnalytics")
+require("ggplot2")
+require("ggpubr")
+
+
+
+### Quantitative explanatory variables: Kendall rank coefficient
+chart.Correlation(snailDF.na[,c("temp", "ph", "cond")], 
+                  histogram=TRUE, pch=19, method = "kendall")
+
+
+
+### Qualitative and quantitative explanatory variables
+
+## Qualitative variables and temp
+ggarrange(ggplot(snailDF.na, aes(x = type, y = temp)) + geom_boxplot(),
+          ggplot(snailDF.na, aes(x = wbtype2, y = temp)) + geom_boxplot(),
+          ggplot(snailDF.na, aes(x = survey, y = temp)) + geom_boxplot(),
+          ggplot(snailDF.na, aes(x = wlevel, y = temp)) + geom_boxplot() + rremove("x.text"), 
+          labels = c("type", "wbtype2", "survey", "wlevel"),
+          ncol = 2, nrow = 2)
+
+## Qualitative variables and pH
+ggarrange(ggplot(snailDF.na, aes(x = type, y = ph)) + geom_boxplot(),
+          ggplot(snailDF.na, aes(x = wbtype2, y = ph)) + geom_boxplot(),
+          ggplot(snailDF.na, aes(x = survey, y = ph)) + geom_boxplot(),
+          ggplot(snailDF.na, aes(x = wlevel, y = ph)) + geom_boxplot() + rremove("x.text"), 
+          labels = c("type", "wbtype2", "survey", "wlevel"),
+          ncol = 2, nrow = 2)
+
+## Qualitative variables and pH
+ggarrange(ggplot(snailDF.na, aes(x = type, y = cond)) + geom_boxplot(),
+          ggplot(snailDF.na, aes(x = wbtype2, y = cond)) + geom_boxplot(),
+          ggplot(snailDF.na, aes(x = survey, y = cond)) + geom_boxplot(),
+          ggplot(snailDF.na, aes(x = wlevel, y = cond)) + geom_boxplot() + rremove("x.text"), 
+          labels = c("type", "wbtype2", "survey", "wlevel"),
+          ncol = 2, nrow = 2)
+```
+
+
+\n
+
+All three explanatory quantitative variables (temperature, conductivity and pH) are correlated (p<0.001), and therefore not independent. Temperature and pH are negatively correlated (p<0.001), whilst conductivity is positively correlated with both temperature and pH. As such, by the end of the model selection process we want a model that **ONLY includes one quantitative variable**, as including two or more independent variables does not meet model assumptions. 
+
+
+Neither of the qualitative explanatory variables are clearly correlated with any of the quantitative explanatory variables. 
+
+## Model fitting and selection
+
+The variables used in initial model selection are as follows: 
+
+#### Response variable 
+* **Sh_all** -> **TOM** fill in please. 
+
+
+#### Explanatory variables of potential interest
+* **wlevel** -> water level    
+* **wbtype2** -> waterbody type: either permanent or temporary    
+* **syrvey** -> four surveys; corresponds to time of year; potentially correlated with wlevel and wbtype2; this vaiable will not be dropped in any model simplification as it accounts for **known differences in snail abundance** (TOM!?) between different seasons.  
+* **temp** -> water temperature   
+* **cond** -> conductivity; indirect measure of water chemistry   
+* **ph** ->  
+* **type** -> human response to treatment; whether people got reinfected quickly or not; four categories    
+
+
+
+#### Random factors   
+* **shehia** -> regions/wards on Pemba
+* **site** -> sites within shesias; hence, site is nested within shehia in models
+
+
+Given the variables described above, we must use a type of generalised linear mixed effects model to test what effects **Sh_all** **TOM** fill in please. . 
+
+
+
+
+
+### Distribution
+As our data is binary (1 is an individual snail is infected and 0 if not), the choice of distribution (family) is straight forward: we will use a binomial distribution. The link function we will use will depend on the flexibility of model implementation (see below). We will initially try the logit link function; however, given that the logit link function may be inappropriate when the numbers of zeroes and ones are very unequal (as our data is), if possible, we will also try the clog-log and clog-clog links. 
+
+
+### Model implementation
+Given the inherently "low information content" of binary data, we will follow many authors before us and fix our binomial generalised linear mixed effects model using Bayesian inferences. 
+
+
+
+
+The brms package implements Bayesian generalized linear mixed models in R using
+the probabilistic programming language Stan. A wide range of distributions and link
+functions are supported, allowing to fit – among others – linear, robust linear, binomial,
+Poisson, survival, ordinal, zero-inflated, and hurdle models. Further modeling options
+include multiple grouping factors each with multiple random effects, autocorrelation of
+the response variable, user defined covariance structures, censored data, as well as metaanalytic standard errors. Prior specifications are flexible and explicitly encourage users
+to apply prior distributions that actually reflect their beliefs. In addition, model fit can
+easily be assessed and compared with the Watanabe-Akaike-Information Criterion and
+leave-one-out cross-validation.
+
+
+First, we test which distribution best fits the data in a maximal model (i.e. including all potential explanatory variables and the random factors). As the response variable is count data, we test both the Poisson and the negative binomial distribution. Moreover, as the response variable is zero inflated, we also test whether the inclusion of a zero inflation parameter improves model fit for the Poisson and the negative binomial distribution. Model fit is evaluated based on visual inspection of QQ plots, AIC and likelihood ratio tests (variance structure).
+
+```{r glmer-BgBn_number-Distributions, message=FALSE, warning=FALSE, cache=TRUE}
+
+```
+
+
 
 
 ## Final model

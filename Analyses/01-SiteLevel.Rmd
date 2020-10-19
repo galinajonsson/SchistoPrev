@@ -132,7 +132,7 @@ Temperature and pH are negatively correlated (p<0.001). From hereon, only temper
 
 
 
-## Model selection
+## Model fitting and selection
 
 The variables used in initial model selection are as follows: 
 

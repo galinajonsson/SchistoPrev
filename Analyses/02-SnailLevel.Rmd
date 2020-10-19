@@ -203,7 +203,7 @@ snailDF <- snailDF %>%
     shehia = shehia.x, 
     site = site.x, 
     survey = survey.x, 
-    type.x = type.x, 
+    type = type.x, 
     zest_arm = zest_arm.x, 
     survey_shehia = survey_shehia.x, 
     wbtype = wbtype.x,
@@ -252,7 +252,17 @@ The response variable used in these analyses is "Sh_all", which denotes whether 
 
 As we will be preforming our model selection using the snailDF.na data set, we inspect its variables. 
 ```{r respvar, cache=TRUE, message=FALSE}
+require(ggplot2)
+require(dplyr)
+
 ### How many **TOM** fill in please are **infected**? 
+snailDF.na %>% 
+  mutate(y = Sh_all %>% as.character()) %>% 
+  ggplot(aes(x = Sh_all)) +
+  geom_bar() +
+  theme(panel.grid = element_blank())
+
+
 table(snailDF.na$Sh_all)
 ```
 
@@ -355,27 +365,62 @@ Given the variables described above, we must use a type of generalised linear mi
 As our data is binary (1 is an individual snail is infected and 0 if not), the choice of distribution (family) is straight forward: we will use a binomial distribution. The link function we will use will depend on the flexibility of model implementation (see below). We will initially try the logit link function; however, given that the logit link function may be inappropriate when the numbers of zeroes and ones are very unequal (as our data is), if possible, we will also try the clog-log and clog-clog links. 
 
 
-### Model implementation
-Given the inherently "low information content" of binary data, we will follow many authors before us and fix our binomial generalised linear mixed effects model using Bayesian inferences. 
+### Model implementation selection
+Given the inherently "low information content" of binary data, we will fit our binomial generalised linear mixed effects model using Bayesian inferences. We will use the R package "brms", which implements Bayesian generalized linear mixed models using the probabilistic programming language Stan. Please see the [brms github page](https://github.com/paul-buerkner/brms) for software installation guides (available for multiple operation systems). Moreover, "brms" allows model fit to be assessed and compared with the Watanabe-Akaike-Information Criterion (WAIC) and leave-one-out cross-validation (LOO).
 
 
+### Prior specifications
+We apply prior distributions to all explanatory variables of potential interest that reflect our actual beliefs and understandings. Our explanatory variables and prior specifications are as follows:
+* **wlevel** -> water level    
+* **wbtype2** -> waterbody type: either permanent or temporary    
+* **syrvey** -> four surveys; corresponds to time of year; potentially correlated with wlevel and wbtype2; this variable will not be dropped in any model simplification as it accounts for **known differences in ??????** (TOM!?) between different seasons.  
+* **temp** -> water temperature in degrees Celsius per survey within the range 22.33C to 33.81C. Although multiple authors (**TOM** examples) have shown that **TOM** the snail/the parasite is limited by temperature (BREIF EXPLINATION), we know/do not know whether it is within the temperature ranges tested here. As such we chose a prior distribution that reflects our this knowledge/lack thereof: a normal prior with mean 0/1/2/3/4**????** and standard deviation 10    
+* **cond** -> conductivity, which is an indirect measure of water chemistry   
+* **ph** ->  
+* **type** -> human response to treatment (i.e. the degree to which infected individuals became reinfected) per shehia, which is divided into four categories. We expect responses to treatment to be an indirect measure of human behavior (**TOM!!??**), such that individuals inhabiting shesias with low rates of reinfection are more likely to exhibit less "risky" behaviors compared to those inhabiting Shesias with high rates of reinfection. Hence, we use a       
+
+(set_prior("normal(0,10)", class = "b"
+
+"Families binomial, bernoulli, Beta, zero_inflated_binomial, zero_inflated_beta, and zero_one_inflated_beta support logit, probit, probit_approx, cloglog, cauchit, and identity."
 
 
-The brms package implements Bayesian generalized linear mixed models in R using
-the probabilistic programming language Stan. A wide range of distributions and link
-functions are supported, allowing to fit – among others – linear, robust linear, binomial,
-Poisson, survival, ordinal, zero-inflated, and hurdle models. Further modeling options
-include multiple grouping factors each with multiple random effects, autocorrelation of
-the response variable, user defined covariance structures, censored data, as well as metaanalytic standard errors. Prior specifications are flexible and explicitly encourage users
-to apply prior distributions that actually reflect their beliefs. In addition, model fit can
-easily be assessed and compared with the Watanabe-Akaike-Information Criterion and
-leave-one-out cross-validation.
-
-
-First, we test which distribution best fits the data in a maximal model (i.e. including all potential explanatory variables and the random factors). As the response variable is count data, we test both the Poisson and the negative binomial distribution. Moreover, as the response variable is zero inflated, we also test whether the inclusion of a zero inflation parameter improves model fit for the Poisson and the negative binomial distribution. Model fit is evaluated based on visual inspection of QQ plots, AIC and likelihood ratio tests (variance structure).
+**Useful web pages**
+* https://mran.microsoft.com/snapshot/2016-02-05/web/packages/brms/vignettes/brms.pdf
 
 ```{r glmer-BgBn_number-Distributions, message=FALSE, warning=FALSE, cache=TRUE}
+require("brms")
 
+get_prior(Sh_all ~ wbtype2 + wlevel + type + survey +
+            temp + cond + ph +
+            (1|shehia/site), 
+          data = snailDF.na)
+
+
+fit1 <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ wbtype2 + wlevel + type + survey +
+            temp + cond + ph +
+            (1|shehia/site), 
+      iter = 1000, warmup = 900, chains = 3,
+      inits  = "random")
+
+
+fit2 <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ wbtype2 + wlevel + type + survey +
+            temp + cond + ph +
+            (1|shehia/site), 
+      prior = c(set_prior("normal(0,100)", class = "b"),
+                set_prior("cauchy(0,20)", class = "sd")),
+      warmup = 5000, iter = 15000, chains = 3,
+      inits  = "random")
+
+
+summary(fit2)
+
+plot(fit1)
 ```
 
 

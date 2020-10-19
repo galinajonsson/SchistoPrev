@@ -14,7 +14,15 @@ output:
 * See further Qs where I've written "TOM" in below text  
 * The figures used in the thesis are not publication standard but I'll reproduce once you know which journal you're going for  
 * In short for your understanding:  the optimal model is a type of mixture model known as a zero inflated negative binomial (**ZINB**) GLMM. The underlying process is such that in the count process (i.e. of *Bulinus* in the field), you sometimes counted zero snails because the snails don’t like the covariates, or due to that you didn't have time to sieve through the whole freakin pond and/or snails were difficult to observe. Hence the resulting survey data fall into three categories: snails were collected, snails were present but not collected (false zeroes) and snails were not present and not collected (true zeroes). ZINBs are called mixture models because the zeros are modelled as coming from two different processes: the binomial process and the count process. the binomial GLM models the probability of measuring a false positive versus all other types of data (counts and true zeros), whilst the count process (non zeros and true zeros) is modelled by a  negative binomial (ZINB) GLMM. 
-* Note that glmmTMB() fits the model using the Laplace approximation - this should probably be mentined in the ms... or not... hmm 
+* Note that glmmTMB() fits the model using the Laplace approximation - this should probably be mentined in the ms... or not... hmm   
+
+
+**Useful web pages**
+* https://cran.r-project.org/web/packages/DHARMa/vignettes/DHARMa.html  
+* https://cran.r-project.org/web/packages/DHARMa/DHARMa.pdf#page=29&zoom=100,133,242  
+* https://cran.r-project.org/web/packages/glmmTMB/vignettes/glmmTMB.pdf  
+
+
 
 
 ## The data

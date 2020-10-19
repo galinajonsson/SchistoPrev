@@ -2,7 +2,11 @@
 title: "02-SnailLevel"
 author: "Galina M. Jönsson"
 date: "16/10/2020"
-output: html_document
+output: 
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
 ---
 
 ## The data
@@ -146,14 +150,14 @@ TempSnail1 <- merge(snailRaw, surveyRaw, by.x="survey_site", by.y="survey_site",
 
 ## merge TempSnail data with shehia (schistosomiasis prevalence) data 
 # perform merge
-TempSnail1 <-merge(TempSnail2, shehiaRaw, by.x="shehia.x", by.y="shehia", all.x=TRUE)
+TempSnail2 <-merge(TempSnail1, shehiaRaw, by.x="shehia.x", by.y="shehia", all.x=TRUE)
 #write.csv(mdf2, "../Data/mdf2.csv")
 
 #### KEEPING COLUMNS of interest FOR MODELS ####
 
 # created new df with only the columns of interest #
 
-df = mdf2[c("shehia.x", "survey_site", "snail_id", "site.x", "survey.x", "type.x", "zest_arm.x", 
+df <- TempSnail2[c("shehia.x", "survey_site", "snail_id", "site.x", "survey.x", "type.x", "zest_arm.x", 
             "survey_shehia.x", "wbtype.x", "wbtype2.x", "lat_Cor", "lon_Cor", "assumed_Bulinus_spp_site", 
             "Sh_all", "Sb_all", "wlevel", "BgBn_number", 
             "temp", "ph", "cond", "tds", "do", "sal", "flow", "depth", 
@@ -193,9 +197,9 @@ df.na.rem <- droplevels(df.na.rem)
 ```
 
 
-### Final model
+## Final model
 
-```{r glmer1.17, message=FALSE, warning=FALSE, cache=TRUE}
+```{r glmer1.17, message=FALSE, warning=FALSE, cache=TRUE, eval=FALSE}
 library(arm)
 
 df.na.glmer1.17 <- glmer(Sh_all ~ (1|shehia.x/site.x) +
@@ -215,7 +219,7 @@ AF1 <- allFit(df.na.glmer1.17, verbose=T)
 
 Chapter 7.4 of this https://bookdown.org/schmettow/NewStats/GLM.html was brilliant at explaining hot to interpret these outputs!!!!
 
-```{r (df.na.glmer1.17-Overview, cache=TRUE}
+```{r (df.na.glmer1.17-Overview, cache=TRUE, eval=FALSE}
 require(effects)
 plot(allEffects(df.na.glmer1.17))
 summary(df.na.glmer1.17)
@@ -228,7 +232,7 @@ summary(df.na.glmer1.17)
 
 #### Water level
 **wlevel**: The effect of water level on whether snails are infected or not is statistically significantly positively linear AND negatively quadratic! (since the wlevel.L and wlevel.Q terms are significant). In other words, going from "1" to "2" to "3", the probability of snails being infected increases BUT due to the negative quadratic term, we know that the rate of increase in probability of infection decreases and becomes a negative trend at a certain point. From above plot, its  obvious that "2" has most infections, i.e. infection rate increases from "1" to "2" and decreases from "2" to "3". We can use the "emmeans" to get the estimated probability of snails being infected in each of the water level types and the function automatically back-transforms estimates for us. For instance, the probability of a snail being infected in water level "1" is 0.00132 (+-0.000732)/0.132% of snails are infected.
-```{r df.na.glmer1.17-wlevel, cache=TRUE}
+```{r df.na.glmer1.17-wlevel, cache=TRUE, eval=FALSE}
 require(emmeans)
 emmeans(df.na.glmer1.17, c("wlevel"), data = df.na.rem, type = "response")
 ```
@@ -243,7 +247,7 @@ emmeans(df.na.glmer1.17, c("wlevel"), data = df.na.rem, type = "response")
 
 E.g. see below that at 27.5 degrees C, the probability of any given snail being infected is 0.00431; therefore, at 28.5 degrees, the odds of a snail being infected is 0.005384194 (0.00431*1.249233)
 \n
-```{r df.na.glmer1.17-temp, cache=TRUE}
+```{r df.na.glmer1.17-temp, cache=TRUE, eval=FALSE}
 require(emmeans)
 emmeans(df.na.glmer1.17, c("temp"), data = df.na.rem, type = "response")
 exp(0.22253)
@@ -256,7 +260,7 @@ exp(0.22253)
 
 E.g. see below that at ph = 7.01, the probability of asnail being infected is 0.00431; therefore, at ph = 8.01, the odds of a snail being infected is 0.001864603 (0.00431*0.4326224)
 \n
-```{r df.na.glmer1.17-ph, cache=TRUE}
+```{r df.na.glmer1.17-ph, cache=TRUE, eval=FALSE}
 require(emmeans)
 emmeans(df.na.glmer1.17, c("ph"), data = df.na.rem, type = "response")
 exp(-0.83789)*100
@@ -266,12 +270,12 @@ exp(-0.83789)*100
 \n
 \n
 
-# Spatial autocorrelation
+## Spatial autocorrelation
 \n
 \n
 
 
-```{r spatial-corr-snail-level, cache=TRUE, warning=FALSE, message=FALSE}
+```{r spatial-corr-snail-level, cache=TRUE, warning=FALSE, message=FALSE, eval=FALSE}
 require(gstat)
 require(lme4)
 require(sp)

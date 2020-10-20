@@ -8,13 +8,83 @@ output:
     toc_depth: 3
     toc_float: true
 ---
-# Notes (remove before sub)
+## Notes (remove before sub)
 * Main question1: is type really a predictor and not an effect? or isit a proxy for human activity?  
 * Main question2: remind me whats novel about this ms pl  
 * See further Qs where I've written "TOM" in below text  
 * The figures used in the thesis are not publication standard but I'll reproduce once you know which journal you're going for  
 * In short for your understanding:  the optimal model is a type of mixture model known as a zero inflated negative binomial (**ZINB**) GLMM. The underlying process is such that in the count process (i.e. of *Bulinus* in the field), you sometimes counted zero snails because the snails don’t like the covariates, or due to that you didn't have time to sieve through the whole freakin pond and/or snails were difficult to observe. Hence the resulting survey data fall into three categories: snails were collected, snails were present but not collected (false zeroes) and snails were not present and not collected (true zeroes). ZINBs are called mixture models because the zeros are modelled as coming from two different processes: the binomial process and the count process. the binomial GLM models the probability of measuring a false positive versus all other types of data (counts and true zeros), whilst the count process (non zeros and true zeros) is modelled by a  negative binomial (ZINB) GLMM. 
 * Note that glmmTMB() fits the model using the Laplace approximation - this should probably be mentined in the ms... or not... hmm   
+
+
+### Checking data sets
+There was some confusion regarding the most up to date data sets as discussed via zoom 20 October. Here I test whether the data sets i have used (here and in 02-SnailLevel.Rmd) differ from those sent by Tom via email 20 Oct. 
+
+#### siteDF / df2_new
+```{r temp-check-dataSets-siteDF, cache=TRUE}
+# Used in below analyses
+siteDF <- read.csv("../Data/df2_new.csv")
+
+# Sent by Tom 20 Oct
+siteDF2 <- read.csv("../Data/2020-10-20/df2_new.csv")
+
+#### Are the two data sets identical? 
+all.equal(siteDF,siteDF2)
+```
+Fantastic - the two data sets are identical and I will therefore remove "../Data/2020-10-20/df2_new.csv" (as its already in the parent folder "../Data"). Moreover, I will duplicate this csv file, name the duplicated file **survey_site_raw.csv** and put it in the parent folder "../Data/rawData".
+
+
+#### siteDF / df2_new : surveyDF
+
+```{r temp-check-dataSets-siteDF-VS-survey_site_data_xeno_v1, cache=TRUE}
+# Used in below analyses
+siteDF <- read.csv("../Data/df2_new.csv")
+
+# Sent by Tom 20 Oct
+surveyDF <- read.csv("../Data/2020-10-20/survey_site_data_xeno_v1.csv")
+
+#### Are the two data sets identical? 
+isTRUE(all.equal(siteDF,surveyDF))
+
+
+# In what way do they differ? 
+require(arsenal)
+summary(comparedf(siteDF,surveyDF))
+```
+
+SurveyDF and SiteDF have the same number of observations (296; 1 per survey). However, surveyDF has 9 fewer columns than SiteDF. SiteDF has one X column (row name), four columns specifying the number of *Bulinus* spp. individuals collected and tested for *Schistosoma* spp. infection per survey, and five columns detailing *Schistosoma* spp. prevalence among *Bulinus* spp. individuals per survey. surveyDF has one column not present in SiteDF: the column "surveyed" specifying whether or not all sites were surveyed at each of the four survey occations. As these rows are removed from the SiteDF data set before analyses, SiteDF is identical but more informative than SurveyDF and SurveyDF will therefore no longer be used and not included in the final parent folder "../Data/rawData".
+
+
+
+#### shehiaRaw / shehia_school_data_v1
+
+```{r temp-check-dataSets-shehia_school_data_v1, cache=TRUE}
+# Used in 02 analyses
+shehiaDF <- read.csv("../Data/shehia_school_data_v1.csv")
+
+# Sent by Tom 20 Oct
+shehiaDF2 <- read.csv("../Data/2020-10-20/shehia_school_data_v1.csv")
+
+#### Are the two data sets identical? 
+all.equal(shehiaDF,shehiaDF2)
+```
+The two data sets are identical and I will therefore remove "../Data/2020-10-20/shehia_school_data_v1.csv" (as its already in the parent folder "../Data"). Moreover, I will duplicate this csv file, name the duplicated file **shehia_school_raw.csv** and put it in the parent folder "../Data/rawData".
+
+#### snailRaw / snail_data_xeno_v1
+
+```{r temp-check-dataSets-snail_data_xeno_v1, cache=TRUE}
+# Used in 02 analyses
+snailDF <- read.csv("../Data/snail_data_xeno_v1.csv")
+
+# Sent by Tom 20 Oct
+snailDF2 <- read.csv("../Data/2020-10-20/snail_data_xeno_v1.csv")
+
+#### Are the two data sets identical? 
+all.equal(snailDF,snailDF2)
+```
+The two data sets are identical and I will therefore remove "../Data/2020-10-20/snail_data_xeno_v1.csv" (as its already in the parent folder "../Data"). Moreover, I will duplicate this csv file, name the duplicated file **snail_xeno_raw.csv** and put it in the parent folder "../Data/rawData".
+
+
 
 
 #### Useful web pages
@@ -33,12 +103,11 @@ Load and tidy the data
 
 ```{r loadNclean-data}
 ### load data
-siteDF <- read.csv("../Data/df2_new.csv")
-
+siteDF <- read.csv("../Data/rawData/survey_site_raw.csv")
 
 
 ### Subset columns of interest
-keeps <- c("USI", "shehia", "survey", "type", "wbtype2", "wlevel", "BgBn_pres", "BgBn_number", "temp", "ph", "cond", "Bulinus_xeno", "Sh", "Sh_pres", "Sh_prev", "lat_cor", "lon_cor", "survey_date")
+keeps <- c("USI", "shehia", "survey", "wbtype2", "wlevel", "BgBn_pres", "BgBn_number", "temp", "ph", "cond", "tds", "sal", "flow", "depth","Bulinus_xeno", "Sh", "Sh_pres", "Sh_prev", "lat_cor", "lon_cor", "survey_date")
 
 siteDF <- siteDF[keeps]
 
@@ -48,11 +117,13 @@ siteDF <- siteDF[keeps]
 siteDF$site <- as.factor(siteDF$USI)
 siteDF$survey <- as.factor(siteDF$survey)
 siteDF$shehia <- as.factor(siteDF$shehia)
-siteDF$type <- factor(siteDF$type, ordered = TRUE, 
-                                levels = c("HNR", "HD", "LNR", "LD"))
 siteDF$wbtype2 <- as.factor(siteDF$wbtype2)
 siteDF$wlevel <- factor(siteDF$wlevel, ordered = TRUE, 
                                 levels = c("1", "2", "3", "4"))
+siteDF$flow <- factor(siteDF$flow, ordered = TRUE, 
+                                levels = c("1", "2", "3", "4"))
+siteDF$depth <- factor(siteDF$depth, ordered = TRUE, 
+                                levels = c("1", "2", "3"))
 siteDF$BgBn_pres <- as.factor(siteDF$BgBn_pres)
 
 
@@ -83,13 +154,17 @@ The response variable is heavily zero inflated. I.e. most surveys did not collec
 \n
 \n
 #### Explanatory variables of potential interest
+**TOM** can you modify these explinations so that they are correct please? 
 * **wlevel** -> water level    
-* **wbtype2** -> waterbody type: either permanent or temporary    
-* **syrvey** -> four surveys; corresponds to time of year; potentially correlated with wlevel and wbtype2    
+* **wbtype2** -> water body type: either permanent or temporary    
+* **survey** -> four surveys; corresponds to time of year; potentially correlated with wlevel and wbtype2    
 * **temp** -> water temperature   
 * **cond** -> conductivity; indirect measure of water chemistry   
 * **ph** -> potentially correlated with conductivity   
-* **type** -> human response to treatment; whether people got reinfected quickly or not; four categories    
+* **tds** -> total dissolved substances; likely correlated with cond and/or sal    
+* **sal** -> water salinity; likely correlated with tds, pH and/or sal   
+* **flow** -> water flow in four categories   
+* **depth** -> water depth in three categories; likely correlated with wbtype2   
 
 
 Potential collinearity between quantitative explanatory variables is tested using the Kendall rank coefficient to establish whether variables are statistically dependent. This test is non-parametric, i.e. does not rely on any assumptions on the distributions of the variables. Collinearity between qualitative and quantitative explanatory variables is visually examined using box plots. 
@@ -100,36 +175,39 @@ require("ggpubr")
 
 
 ### Quantitative explanatory variables: Kendall rank coefficient
-chart.Correlation(siteDF[,c("temp", "ph", "cond")], 
+chart.Correlation(siteDF[,c("temp", "ph", "cond", "tds", "sal")], 
                   histogram=TRUE, pch=19, method = "kendall")
-
+# Each significance level is associated to a symbol : p-values(0.001, 0.01, 0.05, 0.1, 1) <=> symbols(“***”, “**”, “*”, “.”, " “)
 
 
 ### Qualitative and quantitative explanatory variables
 
 ## Qualitative variables and temp
-ggarrange(ggplot(siteDF, aes(x = type, y = temp)) + geom_boxplot(),
-          ggplot(siteDF, aes(x = wbtype2, y = temp)) + geom_boxplot(),
+ggarrange(ggplot(siteDF, aes(x = wbtype2, y = temp)) + geom_boxplot(),
           ggplot(siteDF, aes(x = survey, y = temp)) + geom_boxplot(),
-          ggplot(siteDF, aes(x = wlevel, y = temp)) + geom_boxplot() + rremove("x.text"), 
-          labels = c("type", "wbtype2", "survey", "wlevel"),
-          ncol = 2, nrow = 2)
+          ggplot(siteDF, aes(x = wlevel, y = temp)) + geom_boxplot(),
+          ggplot(siteDF, aes(x = flow, y = temp)) + geom_boxplot(),
+          ggplot(siteDF, aes(x = depth, y = temp)) + geom_boxplot() + rremove("x.text"), 
+          labels = c("wbtype2", "survey", "wlevel", "flow", "depth"),
+          ncol = 3, nrow = 2)
 
 ## Qualitative variables and pH
-ggarrange(ggplot(siteDF, aes(x = type, y = ph)) + geom_boxplot(),
-          ggplot(siteDF, aes(x = wbtype2, y = ph)) + geom_boxplot(),
+ggarrange(ggplot(siteDF, aes(x = wbtype2, y = ph)) + geom_boxplot(),
           ggplot(siteDF, aes(x = survey, y = ph)) + geom_boxplot(),
-          ggplot(siteDF, aes(x = wlevel, y = ph)) + geom_boxplot() + rremove("x.text"), 
-          labels = c("type", "wbtype2", "survey", "wlevel"),
-          ncol = 2, nrow = 2)
+          ggplot(siteDF, aes(x = wlevel, y = ph)) + geom_boxplot(),
+          ggplot(siteDF, aes(x = flow, y = ph)) + geom_boxplot(),
+          ggplot(siteDF, aes(x = depth, y = ph)) + geom_boxplot() + rremove("x.text"), 
+          labels = c("wbtype2", "survey", "wlevel", "flow", "depth"),
+          ncol = 3, nrow = 2)
 
-## Qualitative variables and pH
-ggarrange(ggplot(siteDF, aes(x = type, y = cond)) + geom_boxplot(),
-          ggplot(siteDF, aes(x = wbtype2, y = cond)) + geom_boxplot(),
+## Qualitative variables and cond
+ggarrange(ggplot(siteDF, aes(x = wbtype2, y = cond)) + geom_boxplot(),
           ggplot(siteDF, aes(x = survey, y = cond)) + geom_boxplot(),
-          ggplot(siteDF, aes(x = wlevel, y = cond)) + geom_boxplot() + rremove("x.text"), 
-          labels = c("type", "wbtype2", "survey", "wlevel"),
-          ncol = 2, nrow = 2)
+          ggplot(siteDF, aes(x = wlevel, y = cond)) + geom_boxplot(),
+          ggplot(siteDF, aes(x = flow, y = cond)) + geom_boxplot(),
+          ggplot(siteDF, aes(x = depth, y = cond)) + geom_boxplot() + rremove("x.text"), 
+          labels = c("wbtype2", "survey", "wlevel", "flow", "depth"),
+          ncol = 3, nrow = 2)
 ```
 
 
@@ -137,9 +215,16 @@ ggarrange(ggplot(siteDF, aes(x = type, y = cond)) + geom_boxplot(),
 
 \n
 
-Temperature and pH are negatively correlated (p<0.001). From hereon, only temperature will be used in analyses. Temperature and conductivity show some positive correlation although not statistically significant (p=0.1).
+* Temperature and pH are negatively correlated (p<0.001)   
+* pH is positively correlated with total dissolved substances (p=0.05) and salinity (p=0.05)   
+* Conductivity is positively correlated with total dissolved substances (p=0.001) and salinity (p=0.001)   
+* Total dissolved substances is positively correlated salinity (p=0.001)
 
-
+\n
+Given that conductivity, total dissolved substances and salinity show correlation coefficients close to 1, only conductivity will be considered from hereon as this variable was measured most precisely. \n
+\n
+\n
+Among the qualitative and quantitative explanatory variables, only conductivity and flow appear correlated. 
 
 
 ## Model fitting and selection
@@ -153,12 +238,12 @@ The variables used in initial model selection are as follows:
 #### Explanatory variables of potential interest
 * **wlevel** -> water level    
 * **wbtype2** -> waterbody type: either permanent or temporary    
-* **syrvey** -> four surveys; corresponds to time of year; potentially correlated with wlevel and wbtype2; this vaiable will not be dropped in any model simplification as it accounts for **known differences in snail abundance** (TOM!?) between different seasons.  
+* **survey** -> four surveys; corresponds to time of year; potentially correlated with wlevel and wbtype2; this vaiable will not be dropped in any model simplification as it accounts for **known differences in snail abundance** (TOM!?) between different seasons.  
 * **temp** -> water temperature   
 * **cond** -> conductivity; indirect measure of water chemistry   
 * **ph** -> potentially correlated with conductivity   
-* **type** -> human response to treatment; whether people got reinfected quickly or not; four categories    
-
+* **flow** -> water flow in four categories   
+* **depth** -> water depth in three categories; likely correlated with wbtype2   
 
 
 #### Random factors   
@@ -169,7 +254,7 @@ The variables used in initial model selection are as follows:
 Given the variables described above, we must use a type of generalised linear mixed effects model to test what effects the number of snails collected per survey. 
 
 ### Distributions
-First, we test which distribution best fits the data in a maximal model (i.e. including all potential explanatory variables and the random factors). As the response variable is count data, we test both the Poisson and the negative binomial distribution. Moreover, as the response variable is zero inflated, we also test whether the inclusion of a zero inflation parameter improves model fit for the Poisson and the negative binomial distribution. Model fit is evaluated based on visual inspection of QQ plots, AIC and likelihood ratio tests (variance structure).
+First, we test which distribution best fits the data in a maximal model (i.e. including all potential explanatory variables, two-way interaction terms between quantitative variables and the random factors). As the response variable is count data, we test both the Poisson and the negative binomial distribution. Moreover, as the response variable is zero inflated, we also test whether the inclusion of a zero inflation parameter improves model fit for the Poisson and the negative binomial distribution. Model fit is evaluated based on visual inspection of QQ plots, AIC and likelihood ratio tests (variance structure).
 
 ```{r glmer-BgBn_number-Distributions, message=FALSE, warning=FALSE, cache=TRUE}
 require(lme4)
@@ -180,13 +265,13 @@ require(DHARMa)
 require(lmtest)
 
 ## load (installing if necessary) the checkpoint package
-while (!require("checkpoint")) install.packages("checkpoint")
+#while (!require("checkpoint")) install.packages("checkpoint")
 ## retrieve build date of installed version of TMB
-bd <- as.character(asDateBuilt(packageDescription("TMB",fields="Built")))
-oldrepo <- getOption("repos")
-setSnapshot(bd)
-install.packages("Matrix")
-options(repos=oldrepo) ## restore original repo
+#bd <- as.character(asDateBuilt(packageDescription("TMB",fields="Built")))
+#oldrepo <- getOption("repos")
+#setSnapshot(bd)
+#install.packages("Matrix")
+#options(repos=oldrepo) ## restore original repo
 
 
 ######################################################################
@@ -194,9 +279,11 @@ options(repos=oldrepo) ## restore original repo
 ######################################################################
 
 # Fit maximal model
-glmm.poisson <- glmer(BgBn_number ~ wbtype2 + wlevel + type + survey +
-                 temp + cond +
-                 (1|shehia/site), data=siteDF, family = "poisson")
+glmm.poisson <- glmer(BgBn_number ~ wbtype2 + wlevel + survey +
+                         temp + ph + cond + 
+                           temp * ph + temp * cond +
+                           cond * ph + flow + depth +
+                          (1|shehia/site), data=siteDF, family = "poisson")
 
 # test for zero-inflation
 testZeroInflation(simulateResiduals(glmm.poisson,  n = 1000)) # Evidence suggesting zero inflation 
@@ -210,9 +297,11 @@ plot(simulateResiduals(glmm.poisson,  n = 1000), rank = TRUE)
 ######################################################################
 
 # Fit maximal model
-glmm.ZIpoisson <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + type + survey +
-                          temp + cond + 
-                          (1|shehia/site), data=siteDF,
+glmm.ZIpoisson <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + survey +
+                         temp + ph + cond + 
+                           temp * ph + temp * cond +
+                           cond * ph + flow + depth +
+                          (1|shehia/site),  data=siteDF,
                          ziformula=~1, # one zero inflation parameter applying to all observations
                          family=poisson)
 
@@ -228,9 +317,11 @@ plot(simulateResiduals(glmm.ZIpoisson,  n = 1000), rank = TRUE)
 ######################################################################
 
 # Fit maximal model
-glmm.nb <- glmer.nb(BgBn_number ~ wbtype2 + wlevel + type + survey +
-                         temp + cond + 
-                          (1|shehia/site), data=siteDF)
+glmm.nb <- glmer.nb(BgBn_number ~ wbtype2 + wlevel + survey +
+                         temp + ph + cond + 
+                           temp * ph + temp * cond +
+                           cond * ph + flow + depth +
+                          (1|shehia/site),  data=siteDF)
 # test for zero-inflation
 testZeroInflation(simulateResiduals(glmm.nb,  n = 1000)) # No evidence for zero inflation 
 
@@ -244,8 +335,10 @@ plot(simulateResiduals(glmm.nb,  n = 1000), rank = TRUE)
 ######################################################################
 
 # Fit maximal model
-glmm.ZInb <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + type + survey +
-                         temp + cond + 
+glmm.ZInb <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + survey +
+                         temp + ph + cond + 
+                           temp * ph + temp * cond +
+                           cond * ph + flow + depth +
                           (1|shehia/site), data=siteDF,
                          ziformula = ~1,
                          family = nbinom2)
@@ -281,8 +374,7 @@ AIC(glmm.poisson, glmm.ZIpoisson, glmm.nb, glmm.ZInb)
 
 \n
 
-The inclusion of a zero inflation parameter improves model fit for the Poisson distribution, as evident from the likelihood ratio test (p < 2.2e-16), AIC (6716 vs 4550) and visual inspection of QQ plots. However, the negative binomial distribution fits the data better than the zero inflated Poisson distribution (likelihood ratio test: p < 2.2e-16; AIC: 1745 vs 4550). Again, the inclusion of a zero inflation parameter improves model fit for the negative binomial distribution as well, although improvements aren't as significant as in the case of the Poisson distribution. Nonetheless, a zero inflated negative binomial distribution gives the best fit and will be used to fit the data. 
-
+The inclusion of a zero inflation parameter improves model fit for the Poisson distribution, as evident from the likelihood ratio test (p < 2.2e-16), AIC (5705 vs 3953) and visual inspection of QQ plots. However, the negative binomial distribution fits the data better than the zero inflated Poisson distribution (likelihood ratio test: p < 2.2e-16; AIC: 1730.601 vs 3953). Again, the inclusion of a zero inflation parameter improves model fit for the negative binomial distribution as well, although improvements aren’t as significant as in the case of the Poisson distribution. Nonetheless, a zero inflated negative binomial distribution gives the best fit and will be used to fit the data.
 
 
 
@@ -293,74 +385,315 @@ The inclusion of a zero inflation parameter improves model fit for the Poisson d
 \n
 
 ### Variables
-Now we test which of the explanatory variables can be dropped from the maximal model. We drop each term in turn and select the optimal model using the likelihood ratio test and AIC. Note that we fit the models using a subset of the surveys which have measurements for all explanatory variables.
-
+Now we test which of the explanatory variables can be dropped from the maximal model. We drop each term in turn and select the optimal model using AIC and likelihood ratio test. Note that we fit the models using a subset of the surveys which have measurements for all explanatory variables.
 ```{r glmer-BgBn_number-nb-min-models1, message=FALSE, warning=FALSE, cache=TRUE}
+
 # Fit maximal model
-glmm.ZInb.max <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + type + survey +
-                         temp + cond + 
+glmm.ZInb.max <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + survey +
+                         temp + ph + cond + 
+                           temp * ph + temp * cond +
+                           cond * ph + flow + depth +
                           (1|shehia/site), 
                          contrasts=list(wbtype2="contr.sum", 
                                         wlevel="contr.sum", 
-                                        type="contr.sum",
-                                        survey="contr.sum"),
-                     data=siteDF[complete.cases(siteDF[ , c("temp", "cond")]),],
+                                        survey="contr.sum",
+                                        flow="contr.sum",
+                                        depth="contr.sum"),
+                     data=siteDF[complete.cases(siteDF[ , c("wbtype2", "wlevel",
+                                                            "survey", "temp", 
+                                                            "ph", "cond",
+                                                            "flow" ,"depth")]),],
                          ziformula = ~1,
                          family = nbinom2)
 
-# Drop wbtype2
-glmm.ZInb.min.1 <- glmmTMB(BgBn_number ~ wlevel + type + survey +
-                         temp + cond + 
+
+
+
+### AIC
+
+# Use drop1 to find the highest AIC (i.e. "worst") model
+stats::drop1(glmm.ZInb.max)
+# The model in which the term "ph * cond" is dropped has the highest AIC
+
+
+# Fit a minimal model dropping "ph * cond"
+glmm.ZInb.min.1 <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + survey +
+                         temp + ph + cond + 
+                           temp * ph + temp * cond +
+                           flow + depth +
+                          (1|shehia/site), 
+                         contrasts=list(wbtype2="contr.sum", 
+                                        wlevel="contr.sum", 
+                                        survey="contr.sum",
+                                        flow="contr.sum",
+                                        depth="contr.sum"),
+                     data=siteDF[complete.cases(siteDF[ , c("wbtype2", "wlevel",
+                                                            "survey", "temp", 
+                                                            "ph", "cond",
+                                                            "flow" ,"depth")]),],
+                         ziformula = ~1,
+                         family = nbinom2)
+
+
+
+### Likelihood ratio test 
+require(lmtest)
+lrtest(glmm.ZInb.max, glmm.ZInb.min.1)
+```
+
+\n
+
+The model, in which "ph * cond" was dropped from the maximal model (glmm.ZInb.min.1) had the greatest AIC and was marginally significant according to the likelihood ratio test (p=0.05212); therefore, we drop the "ph * cond" term. 
+
+As these test are approximate and the AICs of models with and without "ph * cond" are very similar, we test whether dropping another term improves model fit further. 
+
+```{r glmer-BgBn_number-nb-min-models2, message=FALSE, warning=FALSE, cache=TRUE}
+# Fit a minimal model dropping "wbtype2"
+glmm.ZInb.min.1.1 <- glmmTMB(BgBn_number ~ wlevel + survey +
+                         temp + ph + cond + 
+                           temp * ph + temp * cond +
+                           flow + depth +
                           (1|shehia/site), 
                          contrasts=list(wlevel="contr.sum", 
-                                        type="contr.sum",
-                                        survey="contr.sum"),
-                      data=siteDF[complete.cases(siteDF[ , c("temp", "cond")]),],
+                                        survey="contr.sum",
+                                        flow="contr.sum",
+                                        depth="contr.sum"),
+                     data=siteDF[complete.cases(siteDF[ , c("wlevel",
+                                                            "survey", "temp", 
+                                                            "ph", "cond",
+                                                            "flow" ,"depth")]),],
                          ziformula = ~1,
                          family = nbinom2)
+
+# Fit a minimal model dropping "wlevel"
+glmm.ZInb.min.1.2 <- glmmTMB(BgBn_number ~ wbtype2 + survey +
+                         temp + ph + cond + 
+                           temp * ph + temp * cond +
+                           flow + depth +
+                          (1|shehia/site), 
+                         contrasts=list(wbtype2="contr.sum", 
+                                        survey="contr.sum",
+                                        flow="contr.sum",
+                                        depth="contr.sum"),
+                     data=siteDF[complete.cases(siteDF[ , c("wbtype2", 
+                                                            "survey", "temp", 
+                                                            "ph", "cond",
+                                                            "flow" ,"depth")]),],
+                         ziformula = ~1,
+                         family = nbinom2)
+
+
+# Fit a minimal model dropping "temp * ph"
+glmm.ZInb.min.1.3 <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + survey +
+                         temp + ph + cond + 
+                           temp * cond +
+                           flow + depth +
+                          (1|shehia/site), 
+                         contrasts=list(wbtype2="contr.sum", 
+                                        wlevel="contr.sum", 
+                                        survey="contr.sum",
+                                        flow="contr.sum",
+                                        depth="contr.sum"),
+                     data=siteDF[complete.cases(siteDF[ , c("wbtype2", "wlevel",
+                                                            "survey", "temp", 
+                                                            "ph", "cond",
+                                                            "flow" ,"depth")]),],
+                         ziformula = ~1,
+                         family = nbinom2)
+
+
+# Fit a minimal model dropping "temp * cond"
+glmm.ZInb.min.1.4 <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + survey +
+                         temp + ph + cond + 
+                           temp * ph + 
+                           flow + depth +
+                          (1|shehia/site), 
+                         contrasts=list(wbtype2="contr.sum", 
+                                        wlevel="contr.sum", 
+                                        survey="contr.sum",
+                                        flow="contr.sum",
+                                        depth="contr.sum"),
+                     data=siteDF[complete.cases(siteDF[ , c("wbtype2", "wlevel",
+                                                            "survey", "temp", 
+                                                            "ph", "cond",
+                                                            "flow" ,"depth")]),],
+                         ziformula = ~1,
+                         family = nbinom2)
+
+
+
+# Fit a minimal model dropping "flow"
+glmm.ZInb.min.1.5 <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + survey +
+                         temp + ph + cond + 
+                           temp * ph + temp * cond +
+                           depth +
+                          (1|shehia/site), 
+                         contrasts=list(wbtype2="contr.sum", 
+                                        wlevel="contr.sum", 
+                                        survey="contr.sum",
+                                        depth="contr.sum"),
+                     data=siteDF[complete.cases(siteDF[ , c("wbtype2", "wlevel",
+                                                            "survey", "temp", 
+                                                            "ph", "cond",
+                                                            "flow" ,"depth")]),],
+                         ziformula = ~1,
+                         family = nbinom2)
+
+
+# Fit a minimal model dropping "depth"
+glmm.ZInb.min.1.6 <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + survey +
+                         temp + ph + cond + 
+                           temp * ph + temp * cond +
+                           flow +
+                          (1|shehia/site), 
+                         contrasts=list(wbtype2="contr.sum", 
+                                        wlevel="contr.sum", 
+                                        survey="contr.sum",
+                                        flow="contr.sum"),
+                     data=siteDF[complete.cases(siteDF[ , c("wbtype2", "wlevel",
+                                                            "survey", "temp", 
+                                                            "ph", "cond",
+                                                            "flow" ,"depth")]),],
+                         ziformula = ~1,
+                         family = nbinom2)
+
+
+
+# Likelihood ratio tests
+require(lmtest)
+lrtest(glmm.ZInb.min.1.1, glmm.ZInb.min.1); lrtest(glmm.ZInb.min.1.2, glmm.ZInb.min.1)
+lrtest(glmm.ZInb.min.1.3, glmm.ZInb.min.1); lrtest(glmm.ZInb.min.1.4, glmm.ZInb.min.1)
+lrtest(glmm.ZInb.min.1.5, glmm.ZInb.min.1); lrtest(glmm.ZInb.min.1.6, glmm.ZInb.min.1)
+
+# AIC
+AIC(glmm.ZInb.min.1, glmm.ZInb.min.1.1, glmm.ZInb.min.1.2, glmm.ZInb.min.1.3, glmm.ZInb.min.1.4, glmm.ZInb.min.1.5, glmm.ZInb.min.1.6)
+```
+Dropping the "temp * cond " interaction term (glmm.ZInb.min.1.4) does not reduce model fit according to the likelihood ratio test (p=0.904) and the resulting model gives the lowest AIC. As such, we drop the "temp * cond " interaction term and test which variable to drop next
+
+
+```{r glmer-BgBn_number-nb-min-models3, message=FALSE, warning=FALSE, cache=TRUE}
+# Fit a minimal model dropping "temp * cond"
+glmm.ZInb.min.1.4 <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + survey +
+                         temp + ph + cond + 
+                           temp * ph + 
+                           flow + depth +
+                          (1|shehia/site), 
+                         contrasts=list(wbtype2="contr.sum", 
+                                        wlevel="contr.sum", 
+                                        survey="contr.sum",
+                                        flow="contr.sum",
+                                        depth="contr.sum"),
+                     data=siteDF[complete.cases(siteDF[ , c("wbtype2", "wlevel",
+                                                            "survey", "temp", 
+                                                            "ph", "cond",
+                                                            "flow" ,"depth")]),],
+                         ziformula = ~1,
+                         family = nbinom2)
+
+
+# Fit a minimal model dropping "wbtype2"
+glmm.ZInb.min.1.4.1 <- glmmTMB(BgBn_number ~ wlevel + survey +
+                         temp + ph + cond + 
+                           temp * ph + 
+                           flow + depth +
+                          (1|shehia/site), 
+                         contrasts=list(wlevel="contr.sum", 
+                                        survey="contr.sum",
+                                        flow="contr.sum",
+                                        depth="contr.sum"),
+                     data=siteDF[complete.cases(siteDF[ , c("wbtype2", "wlevel",
+                                                            "survey", "temp", 
+                                                            "ph", "cond",
+                                                            "flow" ,"depth")]),],
+                         ziformula = ~1,
+                         family = nbinom2)
+
 
 # Drop wlevel
-glmm.ZInb.min.2 <- glmmTMB(BgBn_number ~ wbtype2 + type + survey +
-                         temp + cond + 
+glmm.ZInb.min.1.4.2 <- glmmTMB(BgBn_number ~ wbtype2 + survey +
+                         temp + ph + cond + 
+                           temp * ph + 
+                           flow + depth +
                           (1|shehia/site), 
                          contrasts=list(wbtype2="contr.sum", 
-                                        type="contr.sum",
-                                        survey="contr.sum"),
-                      data=siteDF[complete.cases(siteDF[ , c("temp", "cond")]),],
-                         ziformula = ~1,
-                         family = nbinom2)
-
-# Drop type
-glmm.ZInb.min.3 <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + survey +
-                         temp + cond + 
-                          (1|shehia/site), 
-                         contrasts=list(wbtype2="contr.sum", 
-                                        wlevel="contr.sum", 
-                                        survey="contr.sum"),
-                         data=siteDF[complete.cases(siteDF[ , c("temp", "cond")]),],
-                         family = nbinom2)
-
-# Drop temp
-glmm.ZInb.min.4 <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + type + survey +
-                         cond + 
-                          (1|shehia/site), 
-                         contrasts=list(wbtype2="contr.sum", 
-                                        wlevel="contr.sum", 
-                                        type="contr.sum",
-                                        survey="contr.sum"),
-                         data=siteDF[complete.cases(siteDF[ , c("temp", "cond")]),],
+                                        survey="contr.sum",
+                                        flow="contr.sum",
+                                        depth="contr.sum"),
+                     data=siteDF[complete.cases(siteDF[ , c("wbtype2", "wlevel",
+                                                            "survey", "temp", 
+                                                            "ph", "cond",
+                                                            "flow" ,"depth")]),],
                          ziformula = ~1,
                          family = nbinom2)
 
 # Drop cond
-glmm.ZInb.min.5 <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + type + survey +
-                         temp + 
+glmm.ZInb.min.1.4.3 <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + survey +
+                         temp + ph +
+                           temp * ph + 
+                           flow + depth +
                           (1|shehia/site), 
                          contrasts=list(wbtype2="contr.sum", 
                                         wlevel="contr.sum", 
-                                        type="contr.sum",
-                                        survey="contr.sum"),
-                         data=siteDF[complete.cases(siteDF[ , c("temp", "cond")]),],
+                                        survey="contr.sum",
+                                        flow="contr.sum",
+                                        depth="contr.sum"),
+                     data=siteDF[complete.cases(siteDF[ , c("wbtype2", "wlevel",
+                                                            "survey", "temp", 
+                                                            "ph", "cond",
+                                                            "flow" ,"depth")]),],
+                         ziformula = ~1,
+                         family = nbinom2)
+
+# Drop "temp * ph"
+glmm.ZInb.min.1.4.4 <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + survey +
+                         temp + ph + cond +
+                           flow + depth +
+                          (1|shehia/site), 
+                         contrasts=list(wbtype2="contr.sum", 
+                                        wlevel="contr.sum", 
+                                        survey="contr.sum",
+                                        flow="contr.sum",
+                                        depth="contr.sum"),
+                     data=siteDF[complete.cases(siteDF[ , c("wbtype2", "wlevel",
+                                                            "survey", "temp", 
+                                                            "ph", "cond",
+                                                            "flow" ,"depth")]),],
+                         ziformula = ~1,
+                         family = nbinom2)
+
+# Drop "flow"
+glmm.ZInb.min.1.4.5 <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + survey +
+                         temp + ph + cond +
+                           temp * ph +
+                           depth +
+                          (1|shehia/site), 
+                         contrasts=list(wbtype2="contr.sum", 
+                                        wlevel="contr.sum", 
+                                        survey="contr.sum",
+                                        depth="contr.sum"),
+                     data=siteDF[complete.cases(siteDF[ , c("wbtype2", "wlevel",
+                                                            "survey", "temp", 
+                                                            "ph", "cond",
+                                                            "flow" ,"depth")]),],
+                         ziformula = ~1,
+                         family = nbinom2)
+
+
+
+# Drop "depth"
+glmm.ZInb.min.1.4.6 <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + survey +
+                         temp + ph + cond +
+                           temp * ph +
+                           flow +
+                          (1|shehia/site), 
+                         contrasts=list(wbtype2="contr.sum", 
+                                        wlevel="contr.sum", 
+                                        survey="contr.sum",
+                                        flow="contr.sum"),
+                     data=siteDF[complete.cases(siteDF[ , c("wbtype2", "wlevel",
+                                                            "survey", "temp", 
+                                                            "ph", "cond",
+                                                            "flow" ,"depth")]),],
                          ziformula = ~1,
                          family = nbinom2)
 
@@ -369,145 +702,324 @@ glmm.ZInb.min.5 <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + type + survey +
 
 # Likelihood ratio tests
 require(lmtest)
-lrtest(glmm.ZInb.max, glmm.ZInb.min.1); lrtest(glmm.ZInb.max, glmm.ZInb.min.2)
-lrtest(glmm.ZInb.max, glmm.ZInb.min.3); lrtest(glmm.ZInb.max, glmm.ZInb.min.4)
-lrtest(glmm.ZInb.max, glmm.ZInb.min.5)
+lrtest(glmm.ZInb.min.1.4, glmm.ZInb.min.1.4.1); lrtest(glmm.ZInb.min.1.4, glmm.ZInb.min.1.4.2)
+lrtest(glmm.ZInb.min.1.4, glmm.ZInb.min.1.4.3); lrtest(glmm.ZInb.min.1.4, glmm.ZInb.min.1.4.4)
+lrtest(glmm.ZInb.min.1.4, glmm.ZInb.min.1.4.5); lrtest(glmm.ZInb.min.1.4, glmm.ZInb.min.1.4.6)
 
 # AIC
-AIC(glmm.ZInb.max, glmm.ZInb.min.1, glmm.ZInb.min.2, glmm.ZInb.min.3, glmm.ZInb.min.4, glmm.ZInb.min.5)
+AIC(glmm.ZInb.min.1.4, glmm.ZInb.min.1.4.1, glmm.ZInb.min.1.4.2, glmm.ZInb.min.1.4.3, glmm.ZInb.min.1.4.4, glmm.ZInb.min.1.4.5, glmm.ZInb.min.1.4.6)
 ```
 
 \n
 
+Dropping the "temp * ph" interaction term (glmm.ZInb.min.1.4.4) does not reduce model fit according to the likelihood ratio test (p=0.4269) and the resulting model gives the lowest AIC (1729.014). As such, we drop the "temp * ph" interaction term and test whether the model fit is improved by dropping further terms
 
-The model, in which "cond" was dropped from the count data model (glmm.ZInb.min.5) had an associated p-value of 0.9106 and although it did not have the lowest AIC (1740), it had the second lowest AIC value; therefore, we drop the "cond" term. 
 
-As these test are approximate and the AICs of models with and without "cond" are very similar in terms of AIC-values, we test whether dropping another term improves model fit further. 
-
-```{r glmer-BgBn_number-nb-min-models2, message=FALSE, warning=FALSE, cache=TRUE}
-# Refit glmm.ZInb.min.5
-glmm.ZInb.min.5 <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + type + survey +
-                         temp + 
+```{r glmer-BgBn_number-nb-min-models4, message=FALSE, warning=FALSE, cache=TRUE}
+# Drop "temp * ph"
+glmm.ZInb.min.1.4.4 <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + survey +
+                         temp + ph + cond +
+                           flow + depth +
                           (1|shehia/site), 
                          contrasts=list(wbtype2="contr.sum", 
                                         wlevel="contr.sum", 
-                                        type="contr.sum",
-                                        survey="contr.sum"),
-                         data=siteDF[complete.cases(siteDF[ , c("temp")]),],
+                                        survey="contr.sum",
+                                        flow="contr.sum",
+                                        depth="contr.sum"),
+                     data=siteDF[complete.cases(siteDF[ , c("wbtype2", "wlevel",
+                                                            "survey", "temp", 
+                                                            "ph", "cond",
+                                                            "flow" ,"depth")]),],
                          ziformula = ~1,
                          family = nbinom2)
 
 
-
-# Drop wbtype2
-glmm.ZInb.min.5.1 <- glmmTMB(BgBn_number ~ wlevel + type + survey +
-                         temp + 
+# Drop "wbtype2"
+glmm.ZInb.min.1.4.4.1 <- glmmTMB(BgBn_number ~ wlevel + survey +
+                         temp + ph + cond +
+                           flow + depth +
                           (1|shehia/site), 
                          contrasts=list(wlevel="contr.sum", 
-                                        type="contr.sum",
-                                        survey="contr.sum"),
-                         data=siteDF[complete.cases(siteDF[ , c("temp")]),],
+                                        survey="contr.sum",
+                                        flow="contr.sum",
+                                        depth="contr.sum"),
+                     data=siteDF[complete.cases(siteDF[ , c("wbtype2", "wlevel",
+                                                            "survey", "temp", 
+                                                            "ph", "cond",
+                                                            "flow" ,"depth")]),],
                          ziformula = ~1,
                          family = nbinom2)
 
 
-# Drop wlevel
-glmm.ZInb.min.5.2 <- glmmTMB(BgBn_number ~ wbtype2 + type + survey +
-                         temp + 
+# Drop "wlevel"
+glmm.ZInb.min.1.4.4.2 <- glmmTMB(BgBn_number ~ wbtype2 + survey +
+                         temp + ph + cond +
+                           flow + depth +
                           (1|shehia/site), 
                          contrasts=list(wbtype2="contr.sum", 
-                                        type="contr.sum",
-                                        survey="contr.sum"),
-                         data=siteDF[complete.cases(siteDF[ , c("temp")]),],
+                                        survey="contr.sum",
+                                        flow="contr.sum",
+                                        depth="contr.sum"),
+                     data=siteDF[complete.cases(siteDF[ , c("wbtype2", "wlevel",
+                                                            "survey", "temp", 
+                                                            "ph", "cond",
+                                                            "flow" ,"depth")]),],
                          ziformula = ~1,
                          family = nbinom2)
 
-# Drop type
-glmm.ZInb.min.5.3 <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + survey +
-                         temp + 
+
+# Drop "temp"
+glmm.ZInb.min.1.4.4.3 <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + survey +
+                         ph + cond +
+                           flow + depth +
                           (1|shehia/site), 
                          contrasts=list(wbtype2="contr.sum", 
                                         wlevel="contr.sum", 
-                                        survey="contr.sum"),
-                         data=siteDF[complete.cases(siteDF[ , c("temp")]),],
+                                        survey="contr.sum",
+                                        flow="contr.sum",
+                                        depth="contr.sum"),
+                     data=siteDF[complete.cases(siteDF[ , c("wbtype2", "wlevel",
+                                                            "survey", "temp", 
+                                                            "ph", "cond",
+                                                            "flow" ,"depth")]),],
                          ziformula = ~1,
                          family = nbinom2)
 
-# Drop temp
-glmm.ZInb.min.5.4 <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + type + survey +
+
+# Drop "ph"
+glmm.ZInb.min.1.4.4.4 <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + survey +
+                         temp + cond +
+                           flow + depth +
                           (1|shehia/site), 
-                         contrasts=list(wlevel="contr.sum", 
-                                        type="contr.sum",
-                                        survey="contr.sum"),
-                         data=siteDF[complete.cases(siteDF[ , c("temp")]),],
+                         contrasts=list(wbtype2="contr.sum", 
+                                        wlevel="contr.sum", 
+                                        survey="contr.sum",
+                                        flow="contr.sum",
+                                        depth="contr.sum"),
+                     data=siteDF[complete.cases(siteDF[ , c("wbtype2", "wlevel",
+                                                            "survey", "temp", 
+                                                            "ph", "cond",
+                                                            "flow" ,"depth")]),],
                          ziformula = ~1,
                          family = nbinom2)
+
+
+# Drop "cond"
+glmm.ZInb.min.1.4.4.5 <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + survey +
+                         temp + ph + 
+                           flow + depth +
+                          (1|shehia/site), 
+                         contrasts=list(wbtype2="contr.sum", 
+                                        wlevel="contr.sum", 
+                                        survey="contr.sum",
+                                        flow="contr.sum",
+                                        depth="contr.sum"),
+                     data=siteDF[complete.cases(siteDF[ , c("wbtype2", "wlevel",
+                                                            "survey", "temp", 
+                                                            "ph", "cond",
+                                                            "flow" ,"depth")]),],
+                         ziformula = ~1,
+                         family = nbinom2)
+
+# Drop "flow"
+glmm.ZInb.min.1.4.4.6 <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + survey +
+                         temp + ph + cond +
+                           depth +
+                          (1|shehia/site), 
+                         contrasts=list(wbtype2="contr.sum", 
+                                        wlevel="contr.sum", 
+                                        survey="contr.sum",
+                                        depth="contr.sum"),
+                     data=siteDF[complete.cases(siteDF[ , c("wbtype2", "wlevel",
+                                                            "survey", "temp", 
+                                                            "ph", "cond",
+                                                            "flow" ,"depth")]),],
+                         ziformula = ~1,
+                         family = nbinom2)
+
+
+# Drop "depth"
+glmm.ZInb.min.1.4.4.7 <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + survey +
+                         temp + ph + cond +
+                           flow + 
+                          (1|shehia/site), 
+                         contrasts=list(wbtype2="contr.sum", 
+                                        wlevel="contr.sum", 
+                                        survey="contr.sum",
+                                        flow="contr.sum"),
+                     data=siteDF[complete.cases(siteDF[ , c("wbtype2", "wlevel",
+                                                            "survey", "temp", 
+                                                            "ph", "cond",
+                                                            "flow" ,"depth")]),],
+                         ziformula = ~1,
+                         family = nbinom2)
+
+
 
 
 ### Model comparison
-
 # Likelihood ratio tests
 require(lmtest)
-lrtest(glmm.ZInb.min.5, glmm.ZInb.min.5.1); lrtest(glmm.ZInb.min.5, glmm.ZInb.min.5.2)
-lrtest(glmm.ZInb.min.5, glmm.ZInb.min.5.3); lrtest(glmm.ZInb.min.5, glmm.ZInb.min.5.4)
+lrtest(glmm.ZInb.min.1.4.4, glmm.ZInb.min.1.4.4.1); lrtest(glmm.ZInb.min.1.4.4, glmm.ZInb.min.1.4.4.2)
+lrtest(glmm.ZInb.min.1.4.4, glmm.ZInb.min.1.4.4.3); lrtest(glmm.ZInb.min.1.4.4, glmm.ZInb.min.1.4.4.4)
+lrtest(glmm.ZInb.min.1.4.4, glmm.ZInb.min.1.4.4.5); lrtest(glmm.ZInb.min.1.4.4, glmm.ZInb.min.1.4.4.6)
+lrtest(glmm.ZInb.min.1.4.4, glmm.ZInb.min.1.4.4.7)
 
 # AIC
-AIC(glmm.ZInb.min.5, glmm.ZInb.min.5.1, glmm.ZInb.min.5.2, glmm.ZInb.min.5.3, glmm.ZInb.min.5.4)
+AIC(glmm.ZInb.min.1.4.4, glmm.ZInb.min.1.4.4.1, glmm.ZInb.min.1.4.4.2, glmm.ZInb.min.1.4.4.3,
+    glmm.ZInb.min.1.4.4.4, glmm.ZInb.min.1.4.4.5, glmm.ZInb.min.1.4.4.6, glmm.ZInb.min.1.4.4.7)
 ```
 
-\n
+
+Dropping the "wbtype2" term (glmm.ZInb.min.1.4.4.1) does not reduce model fit according to the likelihood ratio test (p=0.1568) and the resulting model gives the lowest AIC among the reduced models (1729.019). As such, we drop the "wbtype2" term and test whether the model fit is improved by dropping further terms
 
 
-Likelihood ratio tests revealed that the model, in which "wlevel" was dropped from the count data model (glmm.ZInb.min.5.2) gave an associated p-value of 0.8239 but also the lowest AIC (1737) among all models tested. However, dropping "wbtype2" (glmm.ZInb.min.5.1) gave a p-value of 0.5574 (and both wbtype 2 and wlevel are likely to be correlated) so we decide to keep "wlevel" and drop "wbtype2", and test whether dropping another term improves model fit further.  
 
-
-```{r glmer-BgBn_number-nb-min-models3, message=FALSE, warning=FALSE, cache=TRUE}
-# Drop wlevel
-glmm.ZInb.min.5.1.1 <- glmmTMB(BgBn_number ~ type + survey +
-                         temp + 
-                          (1|shehia/site), 
-                         contrasts=list(type="contr.sum",
-                                        survey="contr.sum"),
-                         data=siteDF[complete.cases(siteDF[ , c("temp")]),],
-                         ziformula = ~1,
-                         family = nbinom2)
-
-# Drop type
-glmm.ZInb.min.5.1.2 <- glmmTMB(BgBn_number ~ wlevel + survey +
-                         temp + 
-                          (1|shehia/site),  
-                         contrasts=list(wlevel="contr.sum", 
-                                        survey="contr.sum"),
-                         data=siteDF[complete.cases(siteDF[ , c("temp")]),],
-                         ziformula = ~1,
-                         family = nbinom2)
-
-# Drop temp
-glmm.ZInb.min.5.1.3 <- glmmTMB(BgBn_number ~ wlevel + type + survey +
+```{r glmer-BgBn_number-nb-min-models5, message=FALSE, warning=FALSE, cache=TRUE}
+# Drop "wbtype2"
+glmm.ZInb.min.1.4.4.1 <- glmmTMB(BgBn_number ~ wlevel + survey +
+                         temp + ph + cond +
+                           flow + depth +
                           (1|shehia/site), 
                          contrasts=list(wlevel="contr.sum", 
-                                        type="contr.sum",
-                                        survey="contr.sum"),
-                         data=siteDF[complete.cases(siteDF[ , c("temp")]),],
+                                        survey="contr.sum",
+                                        flow="contr.sum",
+                                        depth="contr.sum"),
+                     data=siteDF[complete.cases(siteDF[ , c("wlevel",
+                                                            "survey", "temp", 
+                                                            "ph", "cond",
+                                                            "flow" ,"depth")]),],
                          ziformula = ~1,
                          family = nbinom2)
+
+
+# Drop "wlevel"
+glmm.ZInb.min.1.4.4.1.1 <- glmmTMB(BgBn_number ~ survey +
+                         temp + ph + cond +
+                           flow + depth +
+                          (1|shehia/site), 
+                         contrasts=list(survey="contr.sum",
+                                        flow="contr.sum",
+                                        depth="contr.sum"),
+                     data=siteDF[complete.cases(siteDF[ , c("wlevel",
+                                                            "survey", "temp", 
+                                                            "ph", "cond",
+                                                            "flow" ,"depth")]),],
+                         ziformula = ~1,
+                         family = nbinom2)
+
+
+
+# Drop "temp"
+glmm.ZInb.min.1.4.4.1.2 <- glmmTMB(BgBn_number ~ wlevel + survey +
+                         ph + cond +
+                           flow + depth +
+                          (1|shehia/site), 
+                         contrasts=list(wlevel="contr.sum", 
+                                        survey="contr.sum",
+                                        flow="contr.sum",
+                                        depth="contr.sum"),
+                     data=siteDF[complete.cases(siteDF[ , c("wlevel",
+                                                            "survey", "temp", 
+                                                            "ph", "cond",
+                                                            "flow" ,"depth")]),],
+                         ziformula = ~1,
+                         family = nbinom2)
+
+
+
+# Drop "ph"
+glmm.ZInb.min.1.4.4.1.3 <- glmmTMB(BgBn_number ~ wlevel + survey +
+                         temp + cond +
+                           flow + depth +
+                          (1|shehia/site), 
+                         contrasts=list(wlevel="contr.sum", 
+                                        survey="contr.sum",
+                                        flow="contr.sum",
+                                        depth="contr.sum"),
+                     data=siteDF[complete.cases(siteDF[ , c("wlevel",
+                                                            "survey", "temp", 
+                                                            "ph", "cond",
+                                                            "flow" ,"depth")]),],
+                         ziformula = ~1,
+                         family = nbinom2)
+
+
+
+
+# Drop "cond"
+glmm.ZInb.min.1.4.4.1.4 <- glmmTMB(BgBn_number ~ wlevel + survey +
+                         temp + ph + 
+                           flow + depth +
+                          (1|shehia/site), 
+                         contrasts=list(wlevel="contr.sum", 
+                                        survey="contr.sum",
+                                        flow="contr.sum",
+                                        depth="contr.sum"),
+                     data=siteDF[complete.cases(siteDF[ , c("wbtype2", "wlevel",
+                                                            "survey", "temp", 
+                                                            "ph", "cond",
+                                                            "flow" ,"depth")]),],
+                         ziformula = ~1,
+                         family = nbinom2)
+
+
+
+
+# Drop "flow"
+glmm.ZInb.min.1.4.4.1.5 <- glmmTMB(BgBn_number ~ wlevel + survey +
+                         temp + ph + cond +
+                           depth +
+                          (1|shehia/site), 
+                         contrasts=list(wlevel="contr.sum", 
+                                        survey="contr.sum",
+                                        depth="contr.sum"),
+                     data=siteDF[complete.cases(siteDF[ , c("wbtype2", "wlevel",
+                                                            "survey", "temp", 
+                                                            "ph", "cond",
+                                                            "flow" ,"depth")]),],
+                         ziformula = ~1,
+                         family = nbinom2)
+
+
+
+
+# Drop "depth"
+glmm.ZInb.min.1.4.4.1.6 <- glmmTMB(BgBn_number ~ wlevel + survey +
+                         temp + ph + cond +
+                           flow + 
+                          (1|shehia/site), 
+                         contrasts=list(wlevel="contr.sum", 
+                                        survey="contr.sum",
+                                        flow="contr.sum"),
+                     data=siteDF[complete.cases(siteDF[ , c("wbtype2", "wlevel",
+                                                            "survey", "temp", 
+                                                            "ph", "cond",
+                                                            "flow" ,"depth")]),],
+                         ziformula = ~1,
+                         family = nbinom2)
+
+
+
+
+
+
 
 
 ### Model comparison
-
 # Likelihood ratio tests
 require(lmtest)
-lrtest(glmm.ZInb.min.5.1, glmm.ZInb.min.5.1.1); lrtest(glmm.ZInb.min.5.1, glmm.ZInb.min.5.1.2)
-lrtest(glmm.ZInb.min.5.1, glmm.ZInb.min.5.1.3)
+lrtest(glmm.ZInb.min.1.4.4.1, glmm.ZInb.min.1.4.4.1.1); lrtest(glmm.ZInb.min.1.4.4.1, glmm.ZInb.min.1.4.4.1.2)
+lrtest(glmm.ZInb.min.1.4.4.1, glmm.ZInb.min.1.4.4.1.3); lrtest(glmm.ZInb.min.1.4.4.1, glmm.ZInb.min.1.4.4.1.4)
+lrtest(glmm.ZInb.min.1.4.4.1, glmm.ZInb.min.1.4.4.1.5); lrtest(glmm.ZInb.min.1.4.4.1, glmm.ZInb.min.1.4.4.1.6)
 
 # AIC
-AIC(glmm.ZInb.min.5.1, glmm.ZInb.min.5.1.1, glmm.ZInb.min.5.1.2, glmm.ZInb.min.5.1.3)
+AIC(glmm.ZInb.min.1.4.4.1, glmm.ZInb.min.1.4.4.1.1, glmm.ZInb.min.1.4.4.1.2, glmm.ZInb.min.1.4.4.1.3,
+    glmm.ZInb.min.1.4.4.1.4, glmm.ZInb.min.1.4.4.1.5, glmm.ZInb.min.1.4.4.1.6)
 ```
 
-Likelihood ratio tests revealed that the model, in which "wlevel" was dropped from the count data model (glmm.ZInb.min.5.1.1) gave an associated p-value of 0.8057 and the lowest AIC (1735.668). Therefore, we also drop "wlevel", making our final model glmm.ZInb.min.5.1.1. 
 
-
-
+# ENDED HERE - WILL REMOVE FLOW
 
 ## Test for autocorrelation
 Test whether there is evidence for spatial or temporal autocorrelation. 

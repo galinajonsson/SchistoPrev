@@ -421,9 +421,9 @@ plot(max.lowInfo)
 ```
 
 
-# OLD SCRIPT BELOW - IGNORE
+## OLD SCRIPT BELOW - IGNORE
 
-## Final model
+### Final model
 
 ```{r glmer1.17, message=FALSE, warning=FALSE, cache=TRUE, eval=FALSE}
 library(arm)
@@ -496,7 +496,7 @@ exp(-0.83789)*100
 \n
 \n
 
-## Spatial autocorrelation
+### Spatial autocorrelation
 \n
 \n
 

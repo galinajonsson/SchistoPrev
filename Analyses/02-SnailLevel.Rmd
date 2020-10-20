@@ -384,29 +384,21 @@ We apply prior distributions to all explanatory variables of potential interest 
 "Families binomial, bernoulli, Beta, zero_inflated_binomial, zero_inflated_beta, and zero_one_inflated_beta support logit, probit, probit_approx, cloglog, cauchit, and identity."
 
 
-**Useful web pages**
-* https://mran.microsoft.com/snapshot/2016-02-05/web/packages/brms/vignettes/brms.pdf
+##### Useful web pages
+* https://mran.microsoft.com/snapshot/2016-02-05/web/packages/brms/vignettes/brms.pdf 
 
-```{r glmer-BgBn_number-Distributions, message=FALSE, warning=FALSE, cache=TRUE}
+
+```{r Sh_all-priors, message=FALSE, warning=FALSE, cache=TRUE}
 require("brms")
 
+### Which priors can we set?
 get_prior(Sh_all ~ wbtype2 + wlevel + type + survey +
             temp + cond + ph +
             (1|shehia/site), 
           data = snailDF.na)
 
-
-fit1 <-
-  brm(data = snailDF.na, 
-      family = bernoulli(link = logit),
-      formula = Sh_all ~ wbtype2 + wlevel + type + survey +
-            temp + cond + ph +
-            (1|shehia/site), 
-      iter = 1000, warmup = 900, chains = 3,
-      inits  = "random")
-
-
-fit2 <-
+### Fit a maximal model with uninformative priors 
+max.lowInfo <-
   brm(data = snailDF.na, 
       family = bernoulli(link = logit),
       formula = Sh_all ~ wbtype2 + wlevel + type + survey +
@@ -418,13 +410,13 @@ fit2 <-
       inits  = "random")
 
 
-summary(fit2)
+summary(max.lowInfo)
 
-plot(fit1)
+plot(max.lowInfo)
 ```
 
 
-
+# OLD SCRIPT BELOW - IGNORE
 
 ## Final model
 

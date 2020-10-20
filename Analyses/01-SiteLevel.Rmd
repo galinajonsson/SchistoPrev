@@ -17,10 +17,12 @@ output:
 * Note that glmmTMB() fits the model using the Laplace approximation - this should probably be mentined in the ms... or not... hmm   
 
 
-**Useful web pages**
+#### Useful web pages
 * https://cran.r-project.org/web/packages/DHARMa/vignettes/DHARMa.html  
 * https://cran.r-project.org/web/packages/DHARMa/DHARMa.pdf#page=29&zoom=100,133,242  
 * https://cran.r-project.org/web/packages/glmmTMB/vignettes/glmmTMB.pdf  
+
+
 
 
 

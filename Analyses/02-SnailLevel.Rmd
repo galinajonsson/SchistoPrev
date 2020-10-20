@@ -384,8 +384,13 @@ We apply prior distributions to all explanatory variables of potential interest 
 "Families binomial, bernoulli, Beta, zero_inflated_binomial, zero_inflated_beta, and zero_one_inflated_beta support logit, probit, probit_approx, cloglog, cauchit, and identity."
 
 
-##### Useful web pages
-* https://mran.microsoft.com/snapshot/2016-02-05/web/packages/brms/vignettes/brms.pdf 
+##### Useful links
+* https://mran.microsoft.com/snapshot/2016-02-05/web/packages/brms/vignettes/brms.pdf   
+* https://bookdown.org/ajkurz/DBDA_recoded/jags-brms.html    
+* https://www.rensvandeschoot.com/tutorials/brms-started/   
+* https://www.rensvandeschoot.com/tutorials/brms-priors/   
+* https://www.rensvandeschoot.com/brms-wambs/   
+
 
 
 ```{r Sh_all-priors, message=FALSE, warning=FALSE, cache=TRUE}

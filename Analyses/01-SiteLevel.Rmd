@@ -456,7 +456,7 @@ AIC(glmm.ZInb.min.5, glmm.ZInb.min.5.1, glmm.ZInb.min.5.2, glmm.ZInb.min.5.3, gl
 \n
 
 
-Likelihood ratio tests revealed that the model, in which "wlevel" was dropped from the count data model (glmm.ZInb.min.5.2) gave an associated p-value of 0.8239 but also the lowest AIC (1746.647) among all models tested. However, dropping "wbtype2" (glmm.ZInb.min.5.1) gave a p-value of 0.5574 (and both wbtype 2 and wlevel are likely to be correlated) so we decide to keep "wlevel" and drop "wbtype2", and test whether dropping another term improves model fit further.  
+Likelihood ratio tests revealed that the model, in which "wlevel" was dropped from the count data model (glmm.ZInb.min.5.2) gave an associated p-value of 0.8239 but also the lowest AIC (1737) among all models tested. However, dropping "wbtype2" (glmm.ZInb.min.5.1) gave a p-value of 0.5574 (and both wbtype 2 and wlevel are likely to be correlated) so we decide to keep "wlevel" and drop "wbtype2", and test whether dropping another term improves model fit further.  
 
 
 ```{r glmer-BgBn_number-nb-min-models3, message=FALSE, warning=FALSE, cache=TRUE}
@@ -512,7 +512,7 @@ Test whether there is evidence for spatial or temporal autocorrelation.
 
 ### Temporal autocorrelation 
 
-Here we test for temporal autocorrelation using Julian dates; hence, assuming that day within a year is a key factor whilst the year itself isn't. The data used here was collected over two years (2017 and 2018) which **TOM** do you know whehther they were somewhat similar or at least not extremely different wether-wise? 
+Here we test for temporal autocorrelation using Julian dates; hence, assuming that day within a year is a key factor whilst the year itself isn't. The data used here was collected over two years (2017 and 2018) which **TOM** do you know whether they were somewhat similar or at least not extremely different weather-wise? 
 ```{r glmm.ZInb.min.5.1.1-autocorrelation-temp, cache=TRUE, message=FALSE}
 require(DHARMa)
 require(glmmTMB)
@@ -613,8 +613,10 @@ The summary shows that:
 * The overdispersion parameter value should be included in publication  
 
 
+
 The type III Wald chisquare test shows:
 * type and survey effect the number of snails collected whilst temperature doesn't  
+
 
 
 
@@ -626,7 +628,7 @@ The effect plots show that there appears to be a negative effect on snail number
 
 
 ### Type
-The effect of type on snail abundance is statistically significant (X2 = 14.8, df = 3, p = 0.002)! The predicted responses are that ponds in type LD areas would on average have 0.881 snails, whilst HNR, HD and LNR areas would have 61.5, 40.7 and 33.8 snails (**TOM** do these numbers sound reasonable?!?!). A post-hoc pairwise Tukey Contrast test shows that there is no statistically significant difference between HNR, HD and LNR areas, whilst all three aforementioned area types are statistically different (have more snails) than LD areas. 
+The effect of type on snail abundance is statistically significant (X2 = 14.8, df = 3, p = 0.002)! The predicted responses are that ponds in type LD areas would on average have 0.881 snails, whilst HNR, HD and LNR areas would have 61.5, 40.7 and 33.8 snails. A post-hoc pairwise Tukey Contrast test shows that there is no statistically significant difference between HNR, HD and LNR areas, whilst all three aforementioned area types are statistically different (have more snails) than LD areas. 
 ```{r glmm.ZInb.min.5.1.1-type, cache=TRUE}
 require(emmeans)
 require(multcomp)
@@ -640,7 +642,7 @@ summary(tukeyType)
 
 ### Survey
 
-The effect of survey on snail abundance is statistically significant (X2 = 16.2, df = 3, p = 0.001)! The predicted responses are that on average, 38.2, 15.9, 9.7 and 12.6 snails were present in ponds during surevy S1, S2, S3 and S4, respectively (**TOM** do these numbers sound reasonable?!?! Remember that we now have accounted for snailes you did not collect but were present with the model formulation). A post-hoc pairwise Tukey Contrast test shows that there is no statistically significant difference between survey 2, 3 and 4, whilst all three aforementioned surveys are statistically different (have fewer snails) than survey 1. 
+The effect of survey on snail abundance is statistically significant (X2 = 16.2, df = 3, p = 0.001)! The predicted responses are that on average, 38.2, 15.9, 9.7 and 12.6 snails were present in ponds during survey S1, S2, S3 and S4, respectively. A post-hoc pairwise Tukey Contrast test shows that there is no statistically significant difference between survey 2, 3 and 4, whilst all three aforementioned surveys are statistically different (have fewer snails) than survey 1. 
 
 \n
 ```{r glmm.ZInb.min.5.1.1-survey, cache=TRUE}

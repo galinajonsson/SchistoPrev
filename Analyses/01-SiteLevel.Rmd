@@ -1428,7 +1428,7 @@ The effect plots show that there appears to be a negative effect on snail number
 
 ### Type
 The effect of type on snail abundance is statistically significant (X2 = 14.8, df = 3, p = 0.002)! The predicted responses are that ponds in type LD areas would on average have 0.881 snails, whilst HNR, HD and LNR areas would have 61.5, 40.7 and 33.8 snails. A post-hoc pairwise Tukey Contrast test shows that there is no statistically significant difference between HNR, HD and LNR areas, whilst all three aforementioned area types are statistically different (have more snails) than LD areas. 
-```{r glmm.ZInb.min.1.4.4.1.5.4.4-type, cache=TRUE}
+```{r glmm.ZInb.min.1.4.4.1.5.4.4-type, cache=TRUE, eval=FALSE}
 require(emmeans)
 require(multcomp)
 

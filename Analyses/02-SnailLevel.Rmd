@@ -20,7 +20,7 @@ Load and tidy the data. These analyses are based on the data sets, each of which
 #############################################################################
 
 # Load data set
-snailRaw <- read.csv("../Data/snail_data_xeno_v1.csv")
+snailRaw <- read.csv("../Data/rawData/snail_xeno_raw.csv")
 
 ## Assign variables appropriate classes
 snailRaw$`snail_id`<-as.factor(snailRaw$`snail_id`)
@@ -32,7 +32,7 @@ snailRaw$`zest_arm`<-as.factor(snailRaw$`zest_arm`)
 snailRaw$`survey_site`<-as.factor(snailRaw$`survey_site`)
 snailRaw$`survey_shehia`<-as.factor(snailRaw$`survey_shehia`)
 snailRaw$`wbtype`<-as.factor(snailRaw$`wbtype`)
-snailRaw$`wbtype2`<-as.factor(snailRaw$`wbtype2`)
+snailRaw$`wbtype2`<-as.integer(snailRaw$`wbtype2`)
 snailRaw$`assumed_Bulinus_spp_site`<-as.factor(snailRaw$`assumed_Bulinus_spp_site`)
 snailRaw$`ITS-1-2-F_outcome`<-as.factor(snailRaw$`ITS_1_2_F_outcome`)
 snailRaw$prepat_schisto_sp<-as.factor(snailRaw$prepat_schisto_sp)
@@ -55,13 +55,12 @@ snailRaw$patent_Schisto<-as.factor(snailRaw$patent_Schisto)
 
 
 
-
 #############################################################################
 #### Survey-level data set - environmental variables + human activities #####
 #############################################################################
 
 # Load data set
-surveyRaw <- read.csv("../Data/survey_site_data_xeno_v1.csv")
+surveyRaw <- read.csv("../Data/rawData/survey_site_raw.csv")
 
 ## Assign variables appropriate classes
 surveyRaw$`site`<-as.factor(surveyRaw$`USI`)
@@ -72,7 +71,7 @@ surveyRaw$`zest_arm`<-as.factor(surveyRaw$`zest_arm`)
 surveyRaw$`survey_site`<-as.factor(surveyRaw$`survey_site`)
 surveyRaw$`survey_shehia`<-as.factor(surveyRaw$`survey_shehia`)
 surveyRaw$`wbtype`<-as.factor(surveyRaw$`wbtype`)
-surveyRaw$`wbtype2`<-as.factor(surveyRaw$`wbtype2`)
+surveyRaw$`wbtype2`<-as.integer(surveyRaw$`wbtype2`)
 surveyRaw$`wlevel`<-as.factor(surveyRaw$`wlevel`)
 surveyRaw$`BgBn_pres`<-as.factor(surveyRaw$`BgBn_pres`)
 surveyRaw$`cerc_sp`<-as.factor(surveyRaw$`cerc_sp`)
@@ -127,7 +126,7 @@ surveyRaw$ungulate<-as.factor(surveyRaw$ungulate)
 #############################################################################
 
 # Load data set
-shehiaRaw <- read.csv("../Data/shehia_school_data_v1.csv")
+shehiaRaw <- read.csv("../Data/rawData/shehia_school_raw.csv")
 
 ## Assign variables appropriate classes
 shehiaRaw$`shehia`<-as.factor(shehiaRaw$`shehia`)
@@ -145,8 +144,6 @@ Now we merge the data sets to get one data set where each individual *Bulinus* i
 ### Merge snailRaw and surveyRaw based on "survey_site" and keep all observations in snailRaw
 snailDFtemp1 <- merge(snailRaw, surveyRaw, by.x="survey_site", by.y="survey_site", all.x=TRUE)
 
-# write.csv(snailDFtemp1, "../Data/mdf1.csv")
-
 # Double check we haven't lost/duplicated any observations
 nrow(snailRaw) == nrow(snailDFtemp1) 
 
@@ -154,8 +151,6 @@ nrow(snailRaw) == nrow(snailDFtemp1)
 
 ### Merge snailDFtemp1 and shehiaRaw based on shehia and keep all observations in snailRaw/snailDFtemp1
 snailDFtemp2 <-merge(snailDFtemp1, shehiaRaw, by.x="shehia.x", by.y="shehia", all.x=TRUE)
-
-#write.csv(snailDFtemp2, "../Data/mdf2.csv")
 
 # Double check we haven't lost/duplicated any observations
 nrow(snailRaw) == nrow(snailDFtemp2) 
@@ -167,31 +162,15 @@ nrow(snailRaw) == nrow(snailDFtemp2)
 ### Subset columns of interest and create a new data frame with only these columns
 snailDF <- snailDFtemp2[c("shehia.x", "survey_site", "snail_id", 
                         "site.x", "survey.x", "type.x",
-                        "zest_arm.x", "survey_shehia.x", "wbtype.x", 
+                        "survey_shehia.x", "wbtype.x", 
                         "wbtype2.x", "lat_Cor", "lon_Cor",
-                        "assumed_Bulinus_spp_site", "Sh_all", "Sb_all", 
-                        "wlevel", "BgBn_number", "temp", 
-                        "ph", "cond", "tds", 
-                        "do", "sal", "flow", 
-                        "depth", "Bfor_pres", "Lym_pres", 
-                        "Mel_pres", "Cleo_pres", "Pila_pres", 
-                        "Lan_pres", "Thiara_pres", "other_snail", 
-                        "Lilies", "rushes", "rice", 
-                        "waterhyacinth", "palmfronds", "sedge", 
-                        "grass", "banana", "veg_any", 
-                        "mud", "sand", "rock", 
-                        "concrete", "roots", "Litter", 
-                        "Dead.wood", "wudu", "bathing", 
-                        "clothes", "dishes", "carbike", 
-                        "collectingwater", "swimmingplaying", 
-                        "fishing", "Ricecult", "otherfarming", 
-                        "sanitation", "water_contact", "cow", 
-                        "goat", "donkey", "ungulate",
-                        "prev_2012", "prev_2013", "prev_2014", 
-                        "prev_2015", "prev_2016", "eggs_2012", 
-                        "eggs_2013", "eggs_2014", "eggs_2015", 
-                        "eggs_2016", "prev_change_12_16", "eggs_change_12_16",
-                        "survey_date")]
+                        "Sh_all", "wlevel", "BgBn_number", "temp", 
+                        "ph", "cond", "tds", "sal", "flow", 
+                        "depth", "Bfor_pres", "other_snail", 
+                        "swimmingplaying", "bathing", 
+                        "clothes", "dishes", "collectingwater",
+                        "Ricecult", "otherfarming")]
+
 
 
 
@@ -204,7 +183,6 @@ snailDF <- snailDF %>%
     site = site.x, 
     survey = survey.x, 
     type = type.x, 
-    zest_arm = zest_arm.x, 
     survey_shehia = survey_shehia.x, 
     wbtype = wbtype.x,
     wbtype2 = wbtype2.x
@@ -212,7 +190,6 @@ snailDF <- snailDF %>%
 
 
 # As we will use "site" nested in "shehia" as random variables, we will remove any sites with six or fewer snails. See the number of snails in each site commented next to the site name below
-#library(Hmisc)
 temp <- nrow(snailDF)
 snailDF <- filter(snailDF, site != "Mat7") # 3
 snailDF <- filter(snailDF, site != "Mat12") # 3
@@ -225,13 +202,34 @@ snailDF <- filter(snailDF, site != "Uku10") # 6
 temp - nrow(snailDF)
 
 
-### Create ordered variables for type and wlevel
+# Look at the structure and assign appropriate classes to all variables
+str(snailDF)
+
+
+### Create ordered variables for ordered factor variables
 snailDF$type <- factor(snailDF$type, ordered = TRUE, 
                                 levels = c("HNR", "HD", "LNR", "LD"))
+snailDF$wbtype <- factor(snailDF$wbtype, ordered = TRUE, 
+                                levels = c("1", "2", "3", "4", "5", "6", "7"))
 snailDF$wlevel <- factor(snailDF$wlevel, ordered = TRUE, 
                                 levels = c("1", "2", "3", "4"))
+snailDF$flow <- factor(snailDF$flow, ordered = TRUE, 
+                                levels = c("1", "2", "3", "4"))
+snailDF$depth <- factor(snailDF$depth, ordered = TRUE, 
+                                levels = c("1", "2", "3"))
 
 
+
+### Change binary variables to integers
+snailDF$Bfor_pres <- as.integer(as.character(snailDF$Bfor_pres))
+snailDF$other_snail <- as.integer(as.character(snailDF$other_snail))
+snailDF$swimmingplaying <- as.integer(as.character(snailDF$swimmingplaying))
+snailDF$bathing <- as.integer(as.character(snailDF$bathing))
+snailDF$clothes <- as.integer(as.character(snailDF$clothes))
+snailDF$dishes <- as.integer(as.character(snailDF$dishes))
+snailDF$collectingwater <- as.integer(as.character(snailDF$collectingwater))
+snailDF$Ricecult <- as.integer(as.character(snailDF$Ricecult))
+snailDF$otherfarming <- as.integer(as.character(snailDF$otherfarming))
 
 
 ### Also create a data frame where all observations have data for all above variables
@@ -266,13 +264,14 @@ snailDF.na %>%
 table(snailDF.na$Sh_all)
 ```
 
-97%, i.e. the majority, of tested individuals were not infected (5101), whilst 3% were (158). 
+96%, i.e. the majority, of tested individuals were not infected (3963), whilst 4% were (153). 
 
 
 ### Test for collinearity between explanatory variables
 \n
 \n
 #### Explanatory variables of potential interest
+**TOM** can you modify these explanations so that they are correct please? 
 * **wlevel** -> water level    
 * **wbtype2** -> waterbody type: either permanent or temporary    
 * **syrvey** -> four surveys; corresponds to time of year; potentially correlated with wlevel and wbtype2    
@@ -280,6 +279,27 @@ table(snailDF.na$Sh_all)
 * **cond** -> conductivity; indirect measure of water chemistry   
 * **ph** -> potentially correlated with conductivity   
 * **type** -> human response to treatment; whether people got reinfected quickly or not; four categories    
+* **tds** -> total dissolved substances; likely correlated with cond and/or sal    
+* **sal** -> water salinity; likely correlated with tds, pH and/or sal   
+* **flow** -> water flow in four categories   
+* **depth** -> water depth in three categories; likely correlated with wbtype2   
+* **Swimmingplaying** -> water contract will increase likelihood of snail infection - also this is children swimming and playing and these are the higher risk group for infections based on the disease endemicity (INFORMATIVE PRIOR)   
+* **bathing** -> water contract will increase likelihood of snail infection, however people may also be less likely to urinate in these areas because people bathing in them? I would suggest we go with INFORMATIVE that it will increase snail infection now though since there is water contact happening and this is key   
+* **othersnail** -> uninformative - presence of other snails may cause 'miracidial sponges' (when schistosomes infect the wrong snail species), however just theory based so we shouldn't use as a prior, but the outcome of model will be interesting.   
+
+
+
+**IF POSSIBLE** 
+\n
+\n
+* **Bfor_pres** -> This will be duplicated in the 'othersnail' column since that is a summary stat of any other snail species present, but this species presence may be of particular interest out of the other snail species... This is another closely related Bulinus species Bulinus forskalii that does not transmit schistosomes on Pemba (although does in West Africa) - however its presence in Pemba might confuse the schistosomes if release similar attractants to the other Bulinus species making the miracidia attempt to infect them. This a very loose theory but could be interesting! :)    
+* **clothes** -> uninformative    
+* **dishes** -> uninformative    
+* **collectingwater** -> uninformative   
+* **ricecult** -> uninformative   
+* **otherfarming** -> uninformative   
+
+
 
 
 Potential collinearity between quantitative explanatory variables is tested using the Kendall rank coefficient to establish whether variables are statistically dependent. This test is non-parametric, i.e. does not rely on any assumptions on the distributions of the variables. Collinearity between qualitative and quantitative explanatory variables is visually examined using box plots. 
@@ -289,47 +309,56 @@ require("ggplot2")
 require("ggpubr")
 
 
-
 ### Quantitative explanatory variables: Kendall rank coefficient
-chart.Correlation(snailDF.na[,c("temp", "ph", "cond")], 
+chart.Correlation(snailDF.na[,c("temp", "ph", "cond", "tds", "sal")], 
                   histogram=TRUE, pch=19, method = "kendall")
-
+# Each significance level is associated to a symbol : p-values(0.001, 0.01, 0.05, 0.1, 1) <=> symbols(“***”, “**”, “*”, “.”, " “)
 
 
 ### Qualitative and quantitative explanatory variables
 
 ## Qualitative variables and temp
-ggarrange(ggplot(snailDF.na, aes(x = type, y = temp)) + geom_boxplot(),
+ggarrange(ggplot(snailDF.na, aes(x = type, y = ph)) + geom_boxplot(),
           ggplot(snailDF.na, aes(x = wbtype2, y = temp)) + geom_boxplot(),
           ggplot(snailDF.na, aes(x = survey, y = temp)) + geom_boxplot(),
-          ggplot(snailDF.na, aes(x = wlevel, y = temp)) + geom_boxplot() + rremove("x.text"), 
-          labels = c("type", "wbtype2", "survey", "wlevel"),
-          ncol = 2, nrow = 2)
+          ggplot(snailDF.na, aes(x = wlevel, y = temp)) + geom_boxplot(),
+          ggplot(snailDF.na, aes(x = flow, y = temp)) + geom_boxplot(),
+          ggplot(snailDF.na, aes(x = depth, y = temp)) + geom_boxplot() + rremove("x.text"), 
+          labels = c("type", "wbtype2", "survey", "wlevel", "flow", "depth"),
+          ncol = 3, nrow = 2)
 
 ## Qualitative variables and pH
 ggarrange(ggplot(snailDF.na, aes(x = type, y = ph)) + geom_boxplot(),
           ggplot(snailDF.na, aes(x = wbtype2, y = ph)) + geom_boxplot(),
           ggplot(snailDF.na, aes(x = survey, y = ph)) + geom_boxplot(),
-          ggplot(snailDF.na, aes(x = wlevel, y = ph)) + geom_boxplot() + rremove("x.text"), 
-          labels = c("type", "wbtype2", "survey", "wlevel"),
-          ncol = 2, nrow = 2)
+          ggplot(snailDF.na, aes(x = wlevel, y = ph)) + geom_boxplot(),
+          ggplot(snailDF.na, aes(x = flow, y = ph)) + geom_boxplot(),
+          ggplot(snailDF.na, aes(x = depth, y = ph)) + geom_boxplot() + rremove("x.text"), 
+          labels = c("type", "wbtype2", "survey", "wlevel", "flow", "depth"),
+          ncol = 3, nrow = 2)
 
-## Qualitative variables and pH
-ggarrange(ggplot(snailDF.na, aes(x = type, y = cond)) + geom_boxplot(),
+## Qualitative variables and cond
+ggarrange(ggplot(snailDF.na, aes(x = type, y = ph)) + geom_boxplot(),
           ggplot(snailDF.na, aes(x = wbtype2, y = cond)) + geom_boxplot(),
           ggplot(snailDF.na, aes(x = survey, y = cond)) + geom_boxplot(),
-          ggplot(snailDF.na, aes(x = wlevel, y = cond)) + geom_boxplot() + rremove("x.text"), 
-          labels = c("type", "wbtype2", "survey", "wlevel"),
-          ncol = 2, nrow = 2)
+          ggplot(snailDF.na, aes(x = wlevel, y = cond)) + geom_boxplot(),
+          ggplot(snailDF.na, aes(x = flow, y = cond)) + geom_boxplot(),
+          ggplot(snailDF.na, aes(x = depth, y = cond)) + geom_boxplot() + rremove("x.text"), 
+          labels = c("type", "wbtype2", "survey", "wlevel", "flow", "depth"),
+          ncol = 3, nrow = 2)
+
 ```
 
 
 \n
+\n
+The majority of explanatory quantitative variables are correlated (p<0.001), and therefore not independent. As such, by the end of the model selection process we want a model that **ONLY includes one quantitative variable**, as including two or more independent variables does not meet model assumptions. Temperature is negatively correlated with pH (p<0.001) and positively correlated with all other variables (p<0.001). All correlation coefficients except between conductivity, total dissolved substances and salinity are less than 0.3, whist conductivity, total dissolved substances and salinity show correlation coefficients close to 1. Only conductivity will be considered from hereon as this variable was measured most precisely. 
 
-All three explanatory quantitative variables (temperature, conductivity and pH) are correlated (p<0.001), and therefore not independent. Temperature and pH are negatively correlated (p<0.001), whilst conductivity is positively correlated with both temperature and pH. As such, by the end of the model selection process we want a model that **ONLY includes one quantitative variable**, as including two or more independent variables does not meet model assumptions. 
+\n
+\n
+\n
+Among the qualitative and quantitative explanatory variables, only temperature and depth appear correlated.
 
-
-Neither of the qualitative explanatory variables are clearly correlated with any of the quantitative explanatory variables. 
 
 ## Model fitting and selection
 
@@ -340,14 +369,31 @@ The variables used in initial model selection are as follows:
 
 
 #### Explanatory variables of potential interest
+**TOM** can you modify these explanations so that they are correct please? 
 * **wlevel** -> water level    
 * **wbtype2** -> waterbody type: either permanent or temporary    
-* **syrvey** -> four surveys; corresponds to time of year; potentially correlated with wlevel and wbtype2; this vaiable will not be dropped in any model simplification as it accounts for **known differences in snail abundance** (TOM!?) between different seasons.  
+* **survey** -> four surveys; corresponds to time of year; potentially correlated with wlevel and wbtype2    
 * **temp** -> water temperature   
 * **cond** -> conductivity; indirect measure of water chemistry   
-* **ph** ->  
+* **ph** -> potentially correlated with conductivity   
 * **type** -> human response to treatment; whether people got reinfected quickly or not; four categories    
+* **flow** -> water flow in four categories   
+* **depth** -> water depth in three categories; likely correlated with wbtype2   
+* **Swimmingplaying** -> water contract will increase likelihood of snail infection - also this is children swimming and playing and these are the higher risk group for infections based on the disease endemicity (INFORMATIVE PRIOR)   
+* **bathing** -> water contract will increase likelihood of snail infection, however people may also be less likely to urinate in these areas because people bathing in them? I would suggest we go with INFORMATIVE that it will increase snail infection now though since there is water contact happening and this is key   
+* **othersnail** -> uninformative - presence of other snails may cause 'miracidial sponges' (when schistosomes infect the wrong snail species), however just theory based so we shouldn't use as a prior, but the outcome of model will be interesting.   
 
+
+
+**IF POSSIBLE** 
+\n
+\n
+* **Bfor_pres** -> This will be duplicated in the 'othersnail' column since that is a summary stat of any other snail species present, but this species presence may be of particular interest out of the other snail species... This is another closely related Bulinus species Bulinus forskalii that does not transmit schistosomes on Pemba (although does in West Africa) - however its presence in Pemba might confuse the schistosomes if release similar attractants to the other Bulinus species making the miracidia attempt to infect them. This a very loose theory but could be interesting! :)    
+* **clothes** -> uninformative    
+* **dishes** -> uninformative    
+* **collectingwater** -> uninformative   
+* **ricecult** -> uninformative   
+* **otherfarming** -> uninformative   
 
 
 #### Random factors   
@@ -393,31 +439,50 @@ We apply prior distributions to all explanatory variables of potential interest 
 
 
 
+
+### Bayesian Binary logistic Regression (with Non-Informative Priors)
+
+Each random effect of each grouping factor has a standard deviation parameter, which is restricted to be non-negative and, by default, has a half Cauchy prior with a scale parameter that
+scales with the standard deviation of the response variable
+
 ```{r Sh_all-priors, message=FALSE, warning=FALSE, cache=TRUE}
 require("brms")
 
 ### Which priors can we set?
-get_prior(Sh_all ~ wbtype2 + wlevel + type + survey +
+get_prior(Sh_all ~ wbtype2 + wlevel + type + survey + flow + depth +
             temp + cond + ph +
+              swimmingplaying + bathing + other_snail +
+              Bfor_pres + clothes + dishes + collectingwater +
+              Ricecult + otherfarming +
             (1|shehia/site), 
           data = snailDF.na)
 
+
+
+
 ### Fit a maximal model with uninformative priors 
-max.lowInfo <-
+max.noInfo <-
   brm(data = snailDF.na, 
-      family = bernoulli(link = logit),
-      formula = Sh_all ~ wbtype2 + wlevel + type + survey +
-            temp + cond + ph +
-            (1|shehia/site), 
-      prior = c(set_prior("normal(0,100)", class = "b"),
-                set_prior("cauchy(0,20)", class = "sd")),
-      warmup = 5000, iter = 15000, chains = 3,
-      inits  = "random")
+      family = bernoulli(link = logit), # specify bernoulli (not binomial) for a binary logistic regression
+      formula = Sh_all ~ # Response variable
+        wbtype2 + wlevel + type + survey + flow + depth +
+            temp + cond + ph + 
+              swimmingplaying + bathing + other_snail +
+              Bfor_pres + clothes + dishes + collectingwater +
+              Ricecult + otherfarming +
+            (1|shehia/site), # Random factor
+      warmup = 5000, # burn-in period (i.e. iterations to be discarded)
+      iter = 15000, # total number of iterations (including burn-in)
+      chains = 3, # number of MCMC 
+      inits  = 0, # inits specifies the starting values of the iterations (normally you can either use the maximum likelihood estimates of the parameters as starting values, or simply ask the algorithm to start with zeros)
+      seed = 666) # specifies the random seed, allowing for replication of results
 
+# Save object
+saveRDS(max.noInfo, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.rds")
 
-summary(max.lowInfo)
+summary(max.noInfo)
 
-plot(max.lowInfo)
+plot(max.noInfo)
 ```
 
 

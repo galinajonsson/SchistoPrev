@@ -17,73 +17,6 @@ output:
 * Note that glmmTMB() fits the model using the Laplace approximation - this should probably be mentined in the ms... or not... hmm   
 
 
-### Checking data sets
-There was some confusion regarding the most up to date data sets as discussed via zoom 20 October. Here I test whether the data sets i have used (here and in 02-SnailLevel.Rmd) differ from those sent by Tom via email 20 Oct. 
-
-#### siteDF / df2_new
-```{r temp-check-dataSets-siteDF, cache=TRUE}
-# Used in below analyses
-siteDF <- read.csv("../Data/df2_new.csv")
-
-# Sent by Tom 20 Oct
-siteDF2 <- read.csv("../Data/2020-10-20/df2_new.csv")
-
-#### Are the two data sets identical? 
-all.equal(siteDF,siteDF2)
-```
-Fantastic - the two data sets are identical and I will therefore remove "../Data/2020-10-20/df2_new.csv" (as its already in the parent folder "../Data"). Moreover, I will duplicate this csv file, name the duplicated file **survey_site_raw.csv** and put it in the parent folder "../Data/rawData".
-
-
-#### siteDF / df2_new : surveyDF
-
-```{r temp-check-dataSets-siteDF-VS-survey_site_data_xeno_v1, cache=TRUE}
-# Used in below analyses
-siteDF <- read.csv("../Data/df2_new.csv")
-
-# Sent by Tom 20 Oct
-surveyDF <- read.csv("../Data/2020-10-20/survey_site_data_xeno_v1.csv")
-
-#### Are the two data sets identical? 
-isTRUE(all.equal(siteDF,surveyDF))
-
-
-# In what way do they differ? 
-require(arsenal)
-summary(comparedf(siteDF,surveyDF))
-```
-
-SurveyDF and SiteDF have the same number of observations (296; 1 per survey). However, surveyDF has 9 fewer columns than SiteDF. SiteDF has one X column (row name), four columns specifying the number of *Bulinus* spp. individuals collected and tested for *Schistosoma* spp. infection per survey, and five columns detailing *Schistosoma* spp. prevalence among *Bulinus* spp. individuals per survey. surveyDF has one column not present in SiteDF: the column "surveyed" specifying whether or not all sites were surveyed at each of the four survey occations. As these rows are removed from the SiteDF data set before analyses, SiteDF is identical but more informative than SurveyDF and SurveyDF will therefore no longer be used and not included in the final parent folder "../Data/rawData".
-
-
-
-#### shehiaRaw / shehia_school_data_v1
-
-```{r temp-check-dataSets-shehia_school_data_v1, cache=TRUE}
-# Used in 02 analyses
-shehiaDF <- read.csv("../Data/shehia_school_data_v1.csv")
-
-# Sent by Tom 20 Oct
-shehiaDF2 <- read.csv("../Data/2020-10-20/shehia_school_data_v1.csv")
-
-#### Are the two data sets identical? 
-all.equal(shehiaDF,shehiaDF2)
-```
-The two data sets are identical and I will therefore remove "../Data/2020-10-20/shehia_school_data_v1.csv" (as its already in the parent folder "../Data"). Moreover, I will duplicate this csv file, name the duplicated file **shehia_school_raw.csv** and put it in the parent folder "../Data/rawData".
-
-#### snailRaw / snail_data_xeno_v1
-
-```{r temp-check-dataSets-snail_data_xeno_v1, cache=TRUE}
-# Used in 02 analyses
-snailDF <- read.csv("../Data/snail_data_xeno_v1.csv")
-
-# Sent by Tom 20 Oct
-snailDF2 <- read.csv("../Data/2020-10-20/snail_data_xeno_v1.csv")
-
-#### Are the two data sets identical? 
-all.equal(snailDF,snailDF2)
-```
-The two data sets are identical and I will therefore remove "../Data/2020-10-20/snail_data_xeno_v1.csv" (as its already in the parent folder "../Data"). Moreover, I will duplicate this csv file, name the duplicated file **snail_xeno_raw.csv** and put it in the parent folder "../Data/rawData".
-
 
 
 
@@ -127,6 +60,15 @@ siteDF$depth <- factor(siteDF$depth, ordered = TRUE,
 siteDF$BgBn_pres <- as.factor(siteDF$BgBn_pres)
 
 
+### remove surveys that had nonsensical pH readings
+# We will specify those readings as to not remove potential NAs in the column
+# Waw5 S3 pH=3.05
+siteDF <- siteDF[!(siteDF$ph==3.05),]
+# Ole8 S1 pH=3.10
+siteDF <- siteDF[!(siteDF$ph==3.10),]
+# Ole7 S1 ph=4.67
+siteDF <- siteDF[!(siteDF$ph==4.67),]
+
 
 ### remove surveys that were not conducted
 siteDF <- siteDF[complete.cases(siteDF[ , "BgBn_number"]),]
@@ -169,6 +111,7 @@ The response variable is heavily zero inflated. I.e. most surveys did not collec
 
 Potential collinearity between quantitative explanatory variables is tested using the Kendall rank coefficient to establish whether variables are statistically dependent. This test is non-parametric, i.e. does not rely on any assumptions on the distributions of the variables. Collinearity between qualitative and quantitative explanatory variables is visually examined using box plots. 
 ```{r collinearity-explanVars-test, message=FALSE, warning=FALSE, cache=TRUE}
+# Load required packages
 require("PerformanceAnalytics")
 require("ggplot2")
 require("ggpubr")
@@ -215,13 +158,13 @@ ggarrange(ggplot(siteDF, aes(x = wbtype2, y = cond)) + geom_boxplot(),
 
 \n
 
-* Temperature and pH are negatively correlated (p<0.001)   
-* pH is positively correlated with total dissolved substances (p=0.05) and salinity (p=0.05)   
+* Temperature and pH are negatively correlated (p<0.001), but the correlation coefficient is -0.2 suggesting it is weak and likely unimportant.  
+* pH is very weakly positively correlated with total dissolved substances (p=0.05) and salinity (p=0.05)   
 * Conductivity is positively correlated with total dissolved substances (p=0.001) and salinity (p=0.001)   
 * Total dissolved substances is positively correlated salinity (p=0.001)
 
 \n
-Given that conductivity, total dissolved substances and salinity show correlation coefficients close to 1, only conductivity will be considered from hereon as this variable was measured most precisely. \n
+Given that conductivity, total dissolved substances and salinity show high correlation coefficients close to 1, only conductivity will be considered from hereon as this variable was measured most precisely. \n
 \n
 \n
 Among the qualitative and quantitative explanatory variables, only conductivity and flow appear correlated. 
@@ -349,7 +292,6 @@ plot(simulateResiduals(glmm.ZInb,  n = 1000), rank = TRUE)
 
 
 
-
 ######################################################################
 ########################## Model Comparison ##########################
 ######################################################################
@@ -359,9 +301,6 @@ require(lmtest)
 
 # Poison vs zero inflated Poisson
 lrtest(glmm.poisson, glmm.ZIpoisson)
-
-# Negative binomial vs Poison 
-lrtest(glmm.nb, glmm.ZIpoisson)
 
 # Negative binomial vs  zero inflated negative binomial
 lrtest(glmm.nb, glmm.ZInb)
@@ -374,7 +313,7 @@ AIC(glmm.poisson, glmm.ZIpoisson, glmm.nb, glmm.ZInb)
 
 \n
 
-The inclusion of a zero inflation parameter improves model fit for the Poisson distribution, as evident from the likelihood ratio test (p < 2.2e-16), AIC (5705 vs 3953) and visual inspection of QQ plots. However, the negative binomial distribution fits the data better than the zero inflated Poisson distribution (likelihood ratio test: p < 2.2e-16; AIC: 1730.601 vs 3953). Again, the inclusion of a zero inflation parameter improves model fit for the negative binomial distribution as well, although improvements aren’t as significant as in the case of the Poisson distribution. Nonetheless, a zero inflated negative binomial distribution gives the best fit and will be used to fit the data.
+The inclusion of a zero inflation parameter for the Poisson distribution does not reach convergence; hence, the likelihood ratio test cannot be preformed and AIC cannot be calculated; however, visual inspection of QQ plots suggests that the zero inflation parameter may improve model fit. The negative binomial distribution fits the data better than the Poisson distribution, as evident from AIC (1737 vs 5704) and visual inspection of QQ plots. The inclusion of a zero inflation parameter improves model fit for the negative binomial distribution, as evident from AIC (1728 vs. 1737), visual inspection of QQ plots and the likelihood ratio test being significant (i.e. the the less restrictive model (the one with more variables/glmm.ZInb) fits the data significantly better than the more restrictive model(glmm.nb)) Hence, a zero inflated negative binomial distribution gives the best fit and will be used to fit the data.
 
 
 
@@ -385,7 +324,7 @@ The inclusion of a zero inflation parameter improves model fit for the Poisson d
 \n
 
 ### Variables
-Now we test which of the explanatory variables can be dropped from the maximal model. We drop each term in turn and select the optimal model using AIC and likelihood ratio test. Note that we fit the models using a subset of the surveys which have measurements for all explanatory variables.
+Now we test which of the explanatory variables can be dropped from the maximal model. We drop each term in turn and select the optimal model using AIC and likelihood ratio test. Note that we fit the models using a subset of the surveys which have measurements for all explanatory variables. We start by only basing our decising on AICs. 
 ```{r glmer-BgBn_number-nb-min-models1, message=FALSE, warning=FALSE, cache=TRUE}
 
 # Fit maximal model
@@ -405,6 +344,7 @@ glmm.ZInb.max <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + survey +
                                                             "flow" ,"depth")]),],
                          ziformula = ~1,
                          family = nbinom2)
+
 
 
 
@@ -443,7 +383,7 @@ lrtest(glmm.ZInb.max, glmm.ZInb.min.1)
 
 \n
 
-The model, in which "ph * cond" was dropped from the maximal model (glmm.ZInb.min.1) had the greatest AIC and was marginally significant according to the likelihood ratio test (p=0.05212); therefore, we drop the "ph * cond" term. 
+The model, in which "ph * cond" was dropped from the maximal model (glmm.ZInb.min.1) had the greatest AIC, and although the likelihood ratio test was significant  (p=0.003577), we have no reason to believe there is an interaction between the variables. Therefore, we drop the "ph * cond" term. 
 
 As these test are approximate and the AICs of models with and without "ph * cond" are very similar, we test whether dropping another term improves model fit further. 
 
@@ -521,7 +461,6 @@ glmm.ZInb.min.1.4 <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + survey +
                          family = nbinom2)
 
 
-
 # Fit a minimal model dropping "flow"
 glmm.ZInb.min.1.5 <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + survey +
                          temp + ph + cond + 
@@ -568,7 +507,7 @@ lrtest(glmm.ZInb.min.1.5, glmm.ZInb.min.1); lrtest(glmm.ZInb.min.1.6, glmm.ZInb.
 # AIC
 AIC(glmm.ZInb.min.1, glmm.ZInb.min.1.1, glmm.ZInb.min.1.2, glmm.ZInb.min.1.3, glmm.ZInb.min.1.4, glmm.ZInb.min.1.5, glmm.ZInb.min.1.6)
 ```
-Dropping the "temp * cond " interaction term (glmm.ZInb.min.1.4) does not reduce model fit according to the likelihood ratio test (p=0.904) and the resulting model gives the lowest AIC. As such, we drop the "temp * cond " interaction term and test which variable to drop next
+Dropping the "temp * cond " interaction term (glmm.ZInb.min.1.4) does not reduce model fit according to the likelihood ratio test (p=0.06) and the resulting model gives the lowest AIC. As such, we drop the "temp * cond " interaction term and test which variable to drop next
 
 
 ```{r glmer-BgBn_number-nb-min-models3, message=FALSE, warning=FALSE, cache=TRUE}
@@ -661,6 +600,7 @@ glmm.ZInb.min.1.4.4 <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + survey +
                          ziformula = ~1,
                          family = nbinom2)
 
+
 # Drop "flow"
 glmm.ZInb.min.1.4.5 <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + survey +
                          temp + ph + cond +
@@ -712,7 +652,7 @@ AIC(glmm.ZInb.min.1.4, glmm.ZInb.min.1.4.1, glmm.ZInb.min.1.4.2, glmm.ZInb.min.1
 
 \n
 
-Dropping the "temp * ph" interaction term (glmm.ZInb.min.1.4.4) does not reduce model fit according to the likelihood ratio test (p=0.4269) and the resulting model gives the lowest AIC (1729.014). As such, we drop the "temp * ph" interaction term and test whether the model fit is improved by dropping further terms
+Dropping the "temp * ph" interaction term (glmm.ZInb.min.1.4.4) does not reduce model fit according to the likelihood ratio test (p=0.5251) and the resulting model gives the lowest AIC (1728.171). As such, we drop the "temp * ph" interaction term and test whether the model fit is improved by dropping further terms
 
 
 ```{r glmer-BgBn_number-nb-min-models4, message=FALSE, warning=FALSE, cache=TRUE}
@@ -821,6 +761,7 @@ glmm.ZInb.min.1.4.4.5 <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + survey +
                          ziformula = ~1,
                          family = nbinom2)
 
+
 # Drop "flow"
 glmm.ZInb.min.1.4.4.6 <- glmmTMB(BgBn_number ~ wbtype2 + wlevel + survey +
                          temp + ph + cond +
@@ -871,9 +812,9 @@ AIC(glmm.ZInb.min.1.4.4, glmm.ZInb.min.1.4.4.1, glmm.ZInb.min.1.4.4.2, glmm.ZInb
 ```
 
 
-Dropping the "wbtype2" term (glmm.ZInb.min.1.4.4.1) does not reduce model fit according to the likelihood ratio test (p=0.1568) and the resulting model gives the lowest AIC among the reduced models (1729.019). As such, we drop the "wbtype2" term and test whether the model fit is improved by dropping further terms
+Dropping the "wbtype2" term (glmm.ZInb.min.1.4.4.1) does not reduce model fit according to the likelihood ratio test (p=0.1847) and the resulting model gives the lowest AIC among the reduced models (1727.931). As such, we drop the "wbtype2" term and test whether the model fit is improved by dropping further terms
 
-
+# Stopped here Thurs 22 Oct
 
 ```{r glmer-BgBn_number-nb-min-models5, message=FALSE, warning=FALSE, cache=TRUE}
 # Drop "wbtype2"
@@ -999,8 +940,6 @@ glmm.ZInb.min.1.4.4.1.6 <- glmmTMB(BgBn_number ~ wlevel + survey +
                                                             "flow" ,"depth")]),],
                          ziformula = ~1,
                          family = nbinom2)
-
-
 
 
 

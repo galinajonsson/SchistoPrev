@@ -4,7 +4,7 @@
 *.xls
 *.csv.zip
 
-# Ignore rdm files which was for internal validation
+# Ignore rdm file for internal data file validation
 /Analyses/hidden_DataFileCheck.Rdm
 
 # Ignore word files

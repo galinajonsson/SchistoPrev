@@ -1240,12 +1240,76 @@ lrtest(glmm.ZInb.min.1.4.4.1.5.4.4, glmm.ZInb.min.1.4.4.1.5.4.4.3)
 AIC(glmm.ZInb.min.1.4.4.1.5.4.4, glmm.ZInb.min.1.4.4.1.5.4.4.1, glmm.ZInb.min.1.4.4.1.5.4.4.2, glmm.ZInb.min.1.4.4.1.5.4.4.3)
 ```
 
+__________________________________________________
+**OLD** Delete!!
 Although likelihood ratio tests and AIC values point towards that model fit is improved by dropping the "wlevel" term; however, we argue that one term accounting for differences in the water volume between the sites sampled should be included in a final model given it's well-documented importance on the study species (**TOM** talking some shit here so please fill in haha). The difference in AIC between keeping and removing the term "temp" is marginal and we will therefore use with the "glmm.ZInb.min.1.4.4.1.5.4.4" model. 
 
 
+**Ended here: talk to Tom about whether wlevel really is needed and not indirectly accounted for by the survey variable? The test say that it should go and model results are much stronger (i.e. lower p-values) when its removed. When its kept in the model, none of the variables clearly come out significant.**
+__________________________________________________
 
-# Ended here: talk to Tom about whether wlevel really is needed and not indirectly accounted for by the survey variable? The test say that it should go and model results are much stronger (i.e. lower p-values) when its removed. When its kept in the model, none of the variables clearly come out significant. 
 
+
+
+__________________________________________________
+**NEW** 
+Actually, I'm making the decision to remove "wlevel" and I'm saying that it's accounted for in "survey"!!!!!!
+
+
+Although we argue that water level should be accounted, we have not shown any evidence for this variable improving model fit. As such, we argue that differences in water level are indirectly accounted for in the "survey" variable. Removing the "wlevel" variable gived the lowest AIC (1733.529) and likelihood ratio test indicate that it does not improve model fit (p=0.5546). Hence we remove the term "wlevel": 
+```{r glmer-BgBn_number-nb-min-models9, message=FALSE, warning=FALSE, cache=TRUE}
+# Drop "wlevel"
+glmm.ZInb.min.1.4.4.1.5.4.4.1 <- glmmTMB(BgBn_number ~ survey +
+                         temp + ph + 
+                          (1|shehia/site), 
+                         contrasts=list(survey="contr.sum"),
+                     data=siteDF[complete.cases(siteDF[ , c("wlevel",
+                                                            "survey", "temp", 
+                                                            "ph")]),],
+                         ziformula = ~1,
+                         family = nbinom2)
+
+
+# Drop "temp"
+glmm.ZInb.min.1.4.4.1.5.4.4.1.1 <- glmmTMB(BgBn_number ~ survey +
+                         ph + 
+                          (1|shehia/site), 
+                         contrasts=list(survey="contr.sum"),
+                     data=siteDF[complete.cases(siteDF[ , c("wlevel",
+                                                            "survey", "temp", 
+                                                            "ph")]),],
+                         ziformula = ~1,
+                         family = nbinom2)
+
+
+
+# Drop "ph"
+glmm.ZInb.min.1.4.4.1.5.4.4.1.2 <- glmmTMB(BgBn_number ~ survey +
+                         temp +
+                          (1|shehia/site), 
+                         contrasts=list(survey="contr.sum"),
+                     data=siteDF[complete.cases(siteDF[ , c("wlevel",
+                                                            "survey", "temp", 
+                                                            "ph")]),],
+                         ziformula = ~1,
+                         family = nbinom2)
+
+
+
+
+
+### Model comparison
+# Likelihood ratio tests
+require(lmtest)
+lrtest(glmm.ZInb.min.1.4.4.1.5.4.4.1, glmm.ZInb.min.1.4.4.1.5.4.4.1.1)
+lrtest(glmm.ZInb.min.1.4.4.1.5.4.4.1, glmm.ZInb.min.1.4.4.1.5.4.4.1.2)
+
+
+# AIC
+AIC(glmm.ZInb.min.1.4.4.1.5.4.4.1, glmm.ZInb.min.1.4.4.1.5.4.4.1.1, glmm.ZInb.min.1.4.4.1.5.4.4.1.2)
+```
+
+AIC values clearly indicate that we are now finished with our model selection proces and will not remove further terms. 
 
 
 ## Test for autocorrelation
@@ -1254,16 +1318,15 @@ Test whether there is evidence for spatial or temporal autocorrelation.
 ### Temporal autocorrelation 
 
 Here we test for temporal autocorrelation using Julian dates; hence, assuming that day within a year is a key factor whilst the year itself isn't. The data used here was collected over two years (2017 and 2018) which **TOM** do you know whether they were somewhat similar or at least not extremely different weather-wise? 
-```{r glmm.ZInb.min.1.4.4.1.5.4.4-autocorrelation-temp, cache=TRUE, message=FALSE}
+```{r glmm.ZInb.min.1.4.4.1.5.4.4.1-autocorrelation-temp, cache=TRUE, message=FALSE}
 require(DHARMa)
 require(glmmTMB)
 
 ### Refit final model
-glmm.ZInb.min.1.4.4.1.5.4.4 <- glmmTMB(BgBn_number ~ wlevel + survey +
+glmm.ZInb.min.1.4.4.1.5.4.4.1 <- glmmTMB(BgBn_number ~ survey +
                          temp + ph + 
                           (1|shehia/site), 
-                         contrasts=list(wlevel="contr.sum", 
-                                        survey="contr.sum"),
+                         contrasts=list(survey="contr.sum"),
                      data=siteDF[complete.cases(siteDF[ , c("wlevel",
                                                             "survey", "temp", 
                                                             "ph")]),],
@@ -1300,7 +1363,7 @@ We get a p-value greater than 0.05 and can therefore reject the alternative hypo
 
 ### Spatial autocorrelation 
 
-```{r glmm.ZInb.min.1.4.4.1.5.4.4-autocorrelation-spatial, cache=TRUE, message=FALSE}
+```{r glmm.ZInb.min.1.4.4.1.5.4.4.1-autocorrelation-spatial, cache=TRUE, message=FALSE}
 ## Spatial
 require(DHARMa)
 E <- simulateResiduals(glmm.ZInb.min.1.4.4.1.5.4.4,  n = 1000)
@@ -1324,23 +1387,23 @@ plot(Vario1)
 We get a p-value greater than 0.05 and can therefore reject the alternative hypothesis (existance of Spatial autocorrelation that is not accounted for by the nested random ractors shehia and site)
 
 
-
+# Ended here 27 OKT
 
 ## Results
 
 ### Overview
 First, we look at the summary of our model and then use a type III Wald chisquare test to test whether any of the explanatory variables affect the number of *Bulinus* individuals collected per survey. Thereafter, we plot the effects of the explanatory variables before going through them one by one (below). 
-```{r glmm.ZInb.min.1.4.4.1.5.4.4-Overview, cache=TRUE, message=FALSE, warning=FALSE}
+```{r glmm.ZInb.min.1.4.4.1.5.4.4.1-Overview, cache=TRUE, message=FALSE, warning=FALSE}
 require(glmmTMB)
 require(car)
 require(effects)
 
-summary(glmm.ZInb.min.1.4.4.1.5.4.4)
-car::Anova(glmm.ZInb.min.1.4.4.1.5.4.4, type="III")
+summary(glmm.ZInb.min.1.4.4.1.5.4.4.1)
+car::Anova(glmm.ZInb.min.1.4.4.1.5.4.4.1, type="III")
 
 effects_ok <- (requireNamespace("effects") && getRversion() >= "3.6.0")
 if (effects_ok) {
-(ae <- allEffects(glmm.ZInb.min.1.4.4.1.5.4.4))
+(ae <- allEffects(glmm.ZInb.min.1.4.4.1.5.4.4.1))
 plot(ae)
 }
 ```
@@ -1371,13 +1434,13 @@ The effect plots show that there appears to be a negative effect on snail number
 
 ### Type
 The effect of type on snail abundance is statistically significant (X2 = 14.8, df = 3, p = 0.002)! The predicted responses are that ponds in type LD areas would on average have 0.881 snails, whilst HNR, HD and LNR areas would have 61.5, 40.7 and 33.8 snails. A post-hoc pairwise Tukey Contrast test shows that there is no statistically significant difference between HNR, HD and LNR areas, whilst all three aforementioned area types are statistically different (have more snails) than LD areas. 
-```{r glmm.ZInb.min.1.4.4.1.5.4.4-type, cache=TRUE, eval=FALSE}
+```{r glmm.ZInb.min.1.4.4.1.5.4.4.1-type, cache=TRUE, eval=FALSE}
 require(emmeans)
 require(multcomp)
 
-emmeans(glmm.ZInb.min.5.1.1, c("type"), data = siteDF[complete.cases(siteDF[ , c("temp")]),], type = "response")
+emmeans(glmm.ZInb.min.1.4.4.1.5.4.4.1, c("type"), data = siteDF[complete.cases(siteDF[ , c("temp")]),], type = "response")
 
-tukeyType <- glht(glmm.ZInb.min.5.1.1, linfct = mcp(type = "Tukey"))
+tukeyType <- glht(glmm.ZInb.min.1.4.4.1.5.4.4.1, linfct = mcp(type = "Tukey"))
 summary(tukeyType)
 ```
 
@@ -1387,13 +1450,13 @@ summary(tukeyType)
 The effect of survey on snail abundance is statistically significant (X2 = 16.2, df = 3, p = 0.001)! The predicted responses are that on average, 38.2, 15.9, 9.7 and 12.6 snails were present in ponds during survey S1, S2, S3 and S4, respectively. A post-hoc pairwise Tukey Contrast test shows that there is no statistically significant difference between survey 2, 3 and 4, whilst all three aforementioned surveys are statistically different (have fewer snails) than survey 1. 
 
 \n
-```{r glmm.ZInb.min.1.4.4.1.5.4.4-survey, cache=TRUE}
+```{r glmm.ZInb.min.1.4.4.1.5.4.4.1-survey, cache=TRUE}
 require(emmeans)
 require(multcomp)
 
-emmeans(glmm.ZInb.min.1.4.4.1.5.4.4, c("survey"), data = siteDF[complete.cases(siteDF[ , c("temp")]),], type = "response")
+emmeans(glmm.ZInb.min.1.4.4.1.5.4.4.1, c("survey"), data = siteDF[complete.cases(siteDF[ , c("temp")]),], type = "response")
 
-tukeySurvey <- glht(glmm.ZInb.min.1.4.4.1.5.4.4, linfct = mcp(survey = "Tukey"))
+tukeySurvey <- glht(glmm.ZInb.min.1.4.4.1.5.4.4.1, linfct = mcp(survey = "Tukey"))
 summary(tukeySurvey)
 ```
 

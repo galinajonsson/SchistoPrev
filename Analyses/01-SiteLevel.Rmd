@@ -814,7 +814,6 @@ AIC(glmm.ZInb.min.1.4.4, glmm.ZInb.min.1.4.4.1, glmm.ZInb.min.1.4.4.2, glmm.ZInb
 
 Dropping the "wbtype2" term (glmm.ZInb.min.1.4.4.1) does not reduce model fit according to the likelihood ratio test (p=0.1847) and the resulting model gives the lowest AIC among the reduced models (1727.931). As such, we drop the "wbtype2" term and test whether the model fit is improved by dropping further terms
 
-# Stopped here Thurs 22 Oct
 
 ```{r glmer-BgBn_number-nb-min-models5, message=FALSE, warning=FALSE, cache=TRUE}
 # Drop "wbtype2"
@@ -959,7 +958,7 @@ AIC(glmm.ZInb.min.1.4.4.1, glmm.ZInb.min.1.4.4.1.1, glmm.ZInb.min.1.4.4.1.2, glm
 ```
 
 
-Dropping the "flow" term (glmm.ZInb.min.1.4.4.1.5) does not reduce model fit according to the likelihood ratio test (p=0.09327) and the resulting model gives the lowest AIC among the reduced models (1729.429). As such, we drop the "flow" term and test whether the model fit is improved by dropping further terms
+Dropping the "flow" term (glmm.ZInb.min.1.4.4.1.5) does not reduce model fit according to the likelihood ratio test (p=0.1041) and the resulting model gives the lowest AIC among the reduced models (1728.091). As such, we drop the "flow" term and test whether the model fit is improved by dropping further terms
 
 
 ```{r glmer-BgBn_number-nb-min-models6, message=FALSE, warning=FALSE, cache=TRUE}
@@ -1074,7 +1073,7 @@ AIC(glmm.ZInb.min.1.4.4.1.5, glmm.ZInb.min.1.4.4.1.5.1, glmm.ZInb.min.1.4.4.1.5.
     glmm.ZInb.min.1.4.4.1.5.4, glmm.ZInb.min.1.4.4.1.5.5)
 ```
 
-Dropping all terms but pH (p=0.05453) do not reduce model fit according to the likelihood ratio test; however, dropping the terms "wlevel" (glmm.ZInb.min.1.4.4.1.5.1) and "cond" (glmm.ZInb.min.1.4.4.1.5.4) result in the greatest p-values and smallest AICs. W drop "cond" as the difference is marginally in favour of this term. 
+Likelihood ratio tests show that the less reduced model fits the data better than any of the reduced models. However, at a certain point in model reduction this is not a surprising result from these tests. AIC values tell a different story: dropping the terms "wlevel" (glmm.ZInb.min.1.4.4.1.5.1) and "cond" (glmm.ZInb.min.1.4.4.1.5.4) result in the smallest AICs. We drop "cond" as the difference is marginally in favor of keeping "wlevels". 
 
 ```{r glmer-BgBn_number-nb-min-models7, message=FALSE, warning=FALSE, cache=TRUE}
 # Drop "cond"
@@ -1169,7 +1168,7 @@ lrtest(glmm.ZInb.min.1.4.4.1.5.4, glmm.ZInb.min.1.4.4.1.5.4.4)
 AIC(glmm.ZInb.min.1.4.4.1.5.4, glmm.ZInb.min.1.4.4.1.5.4.1, glmm.ZInb.min.1.4.4.1.5.4.2, glmm.ZInb.min.1.4.4.1.5.4.3, glmm.ZInb.min.1.4.4.1.5.4.4)
 ```
 
-Dropping the "wlevel" term (glmm.ZInb.min.1.4.4.1.5.4.1) does not reduce model fit according to the likelihood ratio test (0.4696) and the resulting model gives the lowest AIC (1725.347) among the reduced models. However, as "wlevel" and "depth" are  correlated and depth is a more indirect measure (in addition to also not reducing model fit according to the likelihood ratio test (0.1299) and giving reasonably low AIC (1727.917)),  we drop the "depth" term (glmm.ZInb.min.1.4.4.1.5.4.1) and test whether the model fit is improved by dropping further terms.
+Dropping the "wlevel" term (glmm.ZInb.min.1.4.4.1.5.4.1) does not reduce model fit according to the likelihood ratio test (0.5007) and the resulting model gives the lowest AIC (1723.675) among the reduced models. However, as "wlevel" and "depth" are  correlated and depth is a more indirect measure (in addition to also not reducing model fit according to the likelihood ratio test and gives a reasonably low AIC (1726.958); hence, we drop the "depth" term (glmm.ZInb.min.1.4.4.1.5.4.1) and test whether the model fit is improved by dropping further terms.
 
 
 
@@ -1241,7 +1240,12 @@ lrtest(glmm.ZInb.min.1.4.4.1.5.4.4, glmm.ZInb.min.1.4.4.1.5.4.4.3)
 AIC(glmm.ZInb.min.1.4.4.1.5.4.4, glmm.ZInb.min.1.4.4.1.5.4.4.1, glmm.ZInb.min.1.4.4.1.5.4.4.2, glmm.ZInb.min.1.4.4.1.5.4.4.3)
 ```
 
-Although likelihood ratio rests and AIC values point towards that model fit is improved by dropping the "wlevel" term, this term should be accounted for because **TOM** give reason. The difference in AIC between keeping and removing the term "temp" is marginal and we will therefore use with the "glmm.ZInb.min.1.4.4.1.5.4.4" model. 
+Although likelihood ratio tests and AIC values point towards that model fit is improved by dropping the "wlevel" term; however, we argue that one term accounting for differences in the water volume between the sites sampled should be included in a final model given it's well-documented importance on the study species (**TOM** talking some shit here so please fill in haha). The difference in AIC between keeping and removing the term "temp" is marginal and we will therefore use with the "glmm.ZInb.min.1.4.4.1.5.4.4" model. 
+
+
+
+# Ended here: talk to Tom about whether wlevel really is needed and not indirectly accounted for by the survey variable? The test say that it should go and model results are much stronger (i.e. lower p-values) when its removed. When its kept in the model, none of the variables clearly come out significant. 
+
 
 
 ## Test for autocorrelation

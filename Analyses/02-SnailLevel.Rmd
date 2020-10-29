@@ -647,6 +647,162 @@ max.noInfo.temp <-
 
 # Save object
 saveRDS(max.noInfo.temp, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.temp.rds")
+
+
+
+
+
+
+
+### Drop cond
+max.noInfo.cond <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit), # specify bernoulli (not binomial) for a binary logistic regression
+      formula = Sh_all ~ # Response variable
+        wbtype2 + wlevel + type + survey + flow + depth +
+             temp + ph + 
+              swimmingplaying + bathing + other_snail +
+              Bfor_pres + clothes + dishes + collectingwater +
+              Ricecult + otherfarming +
+            (1|shehia/site), # Random factor
+      warmup = 5000, # burn-in period (i.e. iterations to be discarded)
+      iter = 15000, # total number of iterations (including burn-in)
+      chains = 3, # number of MCMC 
+      inits  = 0, # inits specifies the starting values of the iterations (normally you can either use the maximum likelihood estimates of the parameters as starting values, or simply ask the algorithm to start with zeros)
+      seed = 666) # specifies the random seed, allowing for replication of results
+
+# Save object
+saveRDS(max.noInfo.cond, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.cond.rds")
+
+
+
+
+
+
+
+### Drop ph
+max.noInfo.ph <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit), # specify bernoulli (not binomial) for a binary logistic regression
+      formula = Sh_all ~ # Response variable
+        wbtype2 + wlevel + type + survey + flow + depth +
+             temp + cond + 
+              swimmingplaying + bathing + other_snail +
+              Bfor_pres + clothes + dishes + collectingwater +
+              Ricecult + otherfarming +
+            (1|shehia/site), # Random factor
+      warmup = 5000, # burn-in period (i.e. iterations to be discarded)
+      iter = 15000, # total number of iterations (including burn-in)
+      chains = 3, # number of MCMC 
+      inits  = 0, # inits specifies the starting values of the iterations (normally you can either use the maximum likelihood estimates of the parameters as starting values, or simply ask the algorithm to start with zeros)
+      seed = 666) # specifies the random seed, allowing for replication of results
+
+# Save object
+saveRDS(max.noInfo.ph, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.ph.rds")
+
+
+
+
+
+
+
+### Drop swimmingplaying
+max.noInfo.swimmingplaying <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit), # specify bernoulli (not binomial) for a binary logistic regression
+      formula = Sh_all ~ # Response variable
+        wbtype2 + wlevel + type + survey + flow + depth +
+             temp + cond + ph + 
+              bathing + other_snail +
+              Bfor_pres + clothes + dishes + collectingwater +
+              Ricecult + otherfarming +
+            (1|shehia/site), # Random factor
+      warmup = 5000, # burn-in period (i.e. iterations to be discarded)
+      iter = 15000, # total number of iterations (including burn-in)
+      chains = 3, # number of MCMC 
+      inits  = 0, # inits specifies the starting values of the iterations (normally you can either use the maximum likelihood estimates of the parameters as starting values, or simply ask the algorithm to start with zeros)
+      seed = 666) # specifies the random seed, allowing for replication of results
+
+# Save object
+saveRDS(max.noInfo.swimmingplaying, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.swimmingplaying.rds")
+
+
+
+
+
+
+
+### Drop bathing
+max.noInfo.bathing <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit), # specify bernoulli (not binomial) for a binary logistic regression
+      formula = Sh_all ~ # Response variable
+        wbtype2 + wlevel + type + survey + flow + depth +
+             temp + cond + ph + 
+              swimmingplaying + other_snail +
+              Bfor_pres + clothes + dishes + collectingwater +
+              Ricecult + otherfarming +
+            (1|shehia/site), # Random factor
+      warmup = 5000, # burn-in period (i.e. iterations to be discarded)
+      iter = 15000, # total number of iterations (including burn-in)
+      chains = 3, # number of MCMC 
+      inits  = 0, # inits specifies the starting values of the iterations (normally you can either use the maximum likelihood estimates of the parameters as starting values, or simply ask the algorithm to start with zeros)
+      seed = 666) # specifies the random seed, allowing for replication of results
+
+# Save object
+saveRDS(max.noInfo.bathing, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.bathing.rds")
+
+
+
+
+
+
+
+### Drop other_snail
+max.noInfo.other_snail <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit), # specify bernoulli (not binomial) for a binary logistic regression
+      formula = Sh_all ~ # Response variable
+        wbtype2 + wlevel + type + survey + flow + depth +
+             temp + cond + ph + 
+              swimmingplaying + bathing +
+              Bfor_pres + clothes + dishes + collectingwater +
+              Ricecult + otherfarming +
+            (1|shehia/site), # Random factor
+      warmup = 5000, # burn-in period (i.e. iterations to be discarded)
+      iter = 15000, # total number of iterations (including burn-in)
+      chains = 3, # number of MCMC 
+      inits  = 0, # inits specifies the starting values of the iterations (normally you can either use the maximum likelihood estimates of the parameters as starting values, or simply ask the algorithm to start with zeros)
+      seed = 666) # specifies the random seed, allowing for replication of results
+
+# Save object
+saveRDS(max.noInfo.other_snail, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.other_snail.rds")
+
+
+
+
+
+
+
+### Drop Bfor_pres
+max.noInfo.Bfor_pres <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit), # specify bernoulli (not binomial) for a binary logistic regression
+      formula = Sh_all ~ # Response variable
+        wbtype2 + wlevel + type + survey + flow + depth +
+             temp + cond + ph + 
+              swimmingplaying + bathing + other_snail +
+              clothes + dishes + collectingwater +
+              Ricecult + otherfarming +
+            (1|shehia/site), # Random factor
+      warmup = 5000, # burn-in period (i.e. iterations to be discarded)
+      iter = 15000, # total number of iterations (including burn-in)
+      chains = 3, # number of MCMC 
+      inits  = 0, # inits specifies the starting values of the iterations (normally you can either use the maximum likelihood estimates of the parameters as starting values, or simply ask the algorithm to start with zeros)
+      seed = 666) # specifies the random seed, allowing for replication of results
+
+# Save object
+saveRDS(max.noInfo.Bfor_pres, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.Bfor_pres.rds")
 ```
 
 

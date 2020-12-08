@@ -270,6 +270,13 @@ table(snailDF.na$Sh_all)
 ### Test for collinearity between explanatory variables
 \n
 \n
+#### USE THIS METHOD (Added **December 2020**)
+* https://stats.stackexchange.com/questions/45444/how-do-you-visualize-binary-outcomes-versus-a-continuous-predictor (Added **December 2020**)   
+
+
+\n
+\n
+
 #### Explanatory variables of potential interest
 **TOM** can you modify these explanations so that they are correct please? 
 * **wlevel** -> water level    
@@ -436,6 +443,12 @@ We apply prior distributions to all explanatory variables of potential interest 
 * https://www.rensvandeschoot.com/tutorials/brms-started/   
 * https://www.rensvandeschoot.com/tutorials/brms-priors/   
 * https://www.rensvandeschoot.com/brms-wambs/   
+* https://mran.microsoft.com/snapshot/2016-02-05/web/packages/brms/vignettes/brms.pdf (Added **December 2020**)   
+* https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/1365-2656.13087 (Added **December 2020**)   
+* https://cran.r-project.org/web/packages/brms/brms.pdf (Added **December 2020**)   
+* https://bayesat.github.io/lund2018/slides/andrey_anikin_slides.pdf (Added **December 2020**)   
+* https://www.rensvandeschoot.com/tutorials/generalised-linear-models-with-brms/ (Added **December 2020**)   
+
 
 
 
@@ -476,18 +489,6 @@ saveRDS(max.noInfo, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.rds")
 
 ```{r Sh_all-UNINF-eval, message=FALSE, warning=FALSE, cache=TRUE}
 require("brms")
-
-### Which priors can we set?
-get_prior(Sh_all ~ wbtype2 + wlevel + type + survey + flow + depth +
-            temp + cond + ph +
-              swimmingplaying + bathing + other_snail +
-              Bfor_pres + clothes + dishes + collectingwater +
-              Ricecult + otherfarming +
-            (1|shehia/site), 
-          data = snailDF.na)
-
-
-
 
 # Read the maximal model file with no informative priors
 max.noInfo <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max.noInfo.rds")

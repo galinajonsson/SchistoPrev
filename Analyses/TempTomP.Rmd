@@ -95,7 +95,7 @@ ggplot(siteDF, aes(x = wlevel, y = cond)) + geom_boxplot()
 
 \n
 
-temp and ph are clearly collinear 
+temp and ph are clearly collinear. From hereon, only temp will be used.
 
 
 
@@ -107,26 +107,50 @@ require(lme4)
 library(arm)
 
 # Poisson
-glmm.pos <- glmer(BgBn_number ~ wbtype2 + wlevel + type + survey +
-                 arm::rescale(temp) + arm::rescale(ph) + arm::rescale(cond) +
+glmm.poisson <- glmer(BgBn_number ~ wbtype2 + wlevel + type + survey +
+                 arm::rescale(temp) + arm::rescale(cond) +
                  (1|shehia/site), data=siteDF, family = "poisson")
+# test for zero-inflation
+require(DHARMa)
+testZeroInflation(simulateResiduals(glmm.poisson,  n = 1000)) # Evidence suggesting zero inflation 
+
+# Zero inflated poisson with a single zeroinflation parameter applying to all observations
+require(glmmTMB)
+glmm.ZIpoisson <- glmmTMB(BgBn_number ~ wlevel + type + survey +
+                         arm::rescale(temp) + arm::rescale(cond) + 
+                          (1|shehia/site), data=siteDF,
+                         ziformula=~1, # one zero inflation parameter applying to all observations
+                         family=poisson)
+
+llikAIC(glmm.poisson) # 6716.111
+glmm.ZIpoisson # 4548.511
+
+plot(simulateResiduals(glmm.poisson,  n = 1000), rank = TRUE)
+plot(simulateResiduals(glmm.ZIpoisson,  n = 1000), rank = TRUE)
+
+
+### Although a zero inflated poisson model hugely improves model fit as evident from AIC values (6716 vs 4549), and QQplots, the fit is not ideal and the model does not converge. Lets try the negative binomial distribution
+
 
 # Negative binomial
-glmm.nb <- glmer.nb(BgBn_number ~ wbtype2 + wlevel + type + survey +
-                      arm::rescale(temp) + arm::rescale(ph) + arm::rescale(cond) +
-                      (1|shehia/site), data=siteDF)
+glmm.nb <- glmer.nb(BgBn_number ~ wlevel + type + survey +
+                         arm::rescale(temp) + arm::rescale(cond) + 
+                          (1|shehia/site), data=siteDF)
+# test for zero-inflation
+testZeroInflation(simulateResiduals(glmm.nb,  n = 1000)) # No evidence for zero inflation 
 
-glmm.nb2 <- glmer.nb(BgBn_number ~ wbtype2 + wlevel + type + survey +
-                 temp + ph + cond +
-                 (1|shehia/site), data=siteDF)
+# Zero inflated negative binomial with a single zeroinflation parameter applying to all observations
+glmm.ZInb <- glmmTMB(BgBn_number ~ wlevel + type + survey +
+                         arm::rescale(temp) + arm::rescale(cond) + 
+                          (1|shehia/site), data=siteDF,
+                         ziformula = ~1,
+                         family = nbinom2)
 
-# qq plots 
-qqnorm(resid(glmm.pos))
-qqline(resid(glmm.pos))
-qqnorm(resid(glmm.nb))
-qqline(resid(glmm.nb))
-qqnorm(resid(glmm.nb2))
-qqline(resid(glmm.nb2))
+llikAIC(glmm.nb) # 1742.5418
+glmm.ZInb # 1740.3436
+
+plot(simulateResiduals(glmm.nb,  n = 1000), rank = TRUE)
+plot(simulateResiduals(glmm.ZInb,  n = 1000), rank = TRUE)
 ```
 
 \n
@@ -135,7 +159,7 @@ All three models failed to converge but negative binomial distributions looks ni
 
 ```{r glmm.nb-summary, cache=TRUE}
 summary(glmm.nb)
-summary(glmm.nb2)
+summary(glmm.ZInb)
 ```
 \n
 As expected the standardisation doesn't actually affect model fit but rather improves interpretation... oh hold on was this just for binary response variables? I cant remember so will stick to the untransformed data for now.
@@ -152,29 +176,32 @@ Its obvi that the model is struggling to fit the data so I'll take the liberty t
 
 
 ```{r glmer-BgBn_number-nb-min-models, message=FALSE, warning=FALSE, cache=TRUE}
-glmm.nb.min.1 <- glmer.nb(BgBn_number ~ wbtype2 + wlevel + type +
-                          temp + ph + (1|shehia/site), data=siteDF)
+glmm.nb <- glmer.nb(BgBn_number ~ wlevel + type + survey +
+                         arm::rescale(temp) + arm::rescale(cond) + 
+                          (1|shehia/site), data=siteDF)
+summary(glmm.nb)
+summary(glmm.ZInb)
 
-glmm.nb.min.2 <- glmer.nb(BgBn_number ~ wbtype2 + type + survey +
-                          temp + (1|shehia/site), data=siteDF)
+glmm.nb.min.1 <- glmer.nb(BgBn_number ~ wlevel + type + survey +
+                          arm::rescale(temp) +
+                          (1|shehia/site), data=siteDF)
 
-glmm.nb.min.3 <- glmer.nb(BgBn_number ~ wlevel + type + survey +
-                          temp + (1|shehia/site), data=siteDF)
+glmm.ZInb.min.1 <- glmmTMB(BgBn_number ~ wlevel + type + survey +
+                         arm::rescale(temp) + 
+                         (1|shehia/site), 
+                         data=siteDF,
+                         ziformula = ~1,
+                         family = nbinom2)
 
-glmm.nb.min.4 <- glmer.nb(BgBn_number ~ wlevel + survey +
-                          temp + (1|shehia/site), data=siteDF)
+summary(glmm.nb.min.1) # 1743.6
+summary(glmm.ZInb.min.1) # 1739.2
 
-# qq plots 
-qqnorm(resid(glmm.nb))
-qqline(resid(glmm.nb))
-qqnorm(resid(glmm.nb.min.1))
-qqline(resid(glmm.nb.min.1))
-qqnorm(resid(glmm.nb.min.2))
-qqline(resid(glmm.nb.min.2))
-qqnorm(resid(glmm.nb.min.3))
-qqline(resid(glmm.nb.min.3))
-qqnorm(resid(glmm.nb.min.4))
-qqline(resid(glmm.nb.min.4))
+plot(simulateResiduals(glmm.nb.min.1,  n = 1000), rank = TRUE)
+plot(simulateResiduals(glmm.ZInb.min.1,  n = 1000), rank = TRUE)
+
+
+
+
 ```
 
 \n
@@ -190,18 +217,45 @@ Right so model 1-3 reached convergence (whilst 4 did not) in the end and model t
 
 ### Final model
 Test whether there is evidence for spatial or temporal autocorrelation. 
-```{r glmm.nb.min.3-autocorrelation, cache=TRUE}
-E <- resid(glmm.nb.min.3)
+```{r glmm.nb.min.3-autocorrelation, cache=TRUE, message=FALSE}
+## Temporal
+mydata <- (siteDF[complete.cases(siteDF[, c("BgBn_number", "wlevel", "type", "survey",
+                                           "temp", "shehia", "site", "lat_cor", "lon_cor", "survey_date")]),])
+
+mydata$survey_date2 <- as.Date(mydata$survey_date, format = "%d/%m/%Y")
+mydata$survey_date2
+myjulian <- julian(mydates)
+
+
+
+require(glmmTMB)
+
+
+
+glmm.ZINB.min.3 <- glmmTMB(BgBn_number ~ wlevel + type + survey +
+                         temp + (1|shehia/site), data=siteDF,
+                         ziformula = ~1,
+                         family = nbinom2)
+
+
+## Spatial
+require(DHARMa)
+E <- simulateResiduals(glmm.nb.min.1,  n = 1000)
+
+E2 <- resid(glmm.nb.min.1)
 require(gstat)
 require(sp)
 mydata <- (siteDF[complete.cases(siteDF[, c("BgBn_number", "wlevel", "type", "survey",
                                            "temp", "shehia", "site", "lat_cor", "lon_cor", "survey_date")]),])
-mydata <- data.frame(E, mydata$lat_cor, mydata$lon_cor)
-coordinates(mydata) <- c("mydata.lat_cor","mydata.lon_cor")
-bubble(mydata, "E", col = c("black","grey"),
+mydata <- data.frame(E2, mydata$lon_cor, mydata$lat_cor)
+coordinates(mydata) <- c("mydata.lon_cor","mydata.lat_cor")
+bubble(mydata, "E2", col = c("black","grey"),
 main = "Residuals", xlab = "X-coordinates", ylab = "Y-coordinates")
 
-Vario1 <- variogram(E ~ 1, mydata)
+testSpatialAutocorrelation(glmm.ZInb.min.1, x = mydata$lat_cor, y = mydata$lon_cor)
+testSpatialAutocorrelation(E, x = mydata$lat_cor, y = mydata$lon_cor)
+
+Vario1 <- variogram(E2 ~ 1, mydata)
 plot(Vario1)
 ```
 Standardised residuals obtained by the linear regression model plotted versus their spatial coordinates. Black dotes are negative residuals, and grey dots are positive residuals.
@@ -756,11 +810,13 @@ dim(siteDF_coord)
 
 # Find residuals from response variable of final model
 #E <- residuals(glmm.nb.min.3, type = "response")
-E <- resid(glmm.nb.min.3)
+E <- rstandard(glmm.nb.min.3)
 
 siteDF_res <- data.frame(E, siteDF_coord$lat_cor, siteDF_coord$lon_cor)
 
-coordinates(siteDF_res) <- c("siteDF_coord.lat_cor", "siteDF_coord.lon_cor")
+#coordinates(siteDF_res) <- c("siteDF_coord.lat_cor", "siteDF_coord.lon_cor")
+coordinates(siteDF_res) <- c("siteDF_coord.lon_cor", "siteDF_coord.lat_cor")
+
 
 bubble(siteDF_res, "E", col = c("black", "grey"),
        main = "Residuals", xlab = "X-coordinates",
@@ -931,6 +987,11 @@ df.na.glmer1.17 <- glmer(Sh_all ~ (1|shehia.x/site.x) +
                          family = binomial(link = "logit"),
                          glmerControl("bobyqa"))
 
+df.na.glmer1.17 <- glmer(Sh_all ~ (1|shehia.x/site.x) +
+                           wlevel + temp + ph,
+                            data = df.na.rem, 
+                         family = binomial(link = "logit"),
+                         glmerControl("bobyqa"))
 
 
 # Find residuals from response variable of final model

@@ -1,0 +1,73 @@
+---
+title: "Check Data Files"
+author: "Galina M. Jönsson"
+date: "22/10/2020"
+output: html_document
+---
+
+### Checking data sets
+There was some confusion regarding the most up to date data sets as discussed via zoom 20 October 2020. Here I test whether the data sets i have used (here and in 02-SnailLevel.Rmd) differ from those sent by Tom via email 20 Oct. 
+
+#### siteDF / df2_new
+```{r temp-check-dataSets-siteDF, cache=TRUE}
+# Used in below analyses
+siteDF <- read.csv("../Data/df2_new.csv")
+
+# Sent by Tom 20 Oct
+siteDF2 <- read.csv("../Data/2020-10-20/df2_new.csv")
+
+#### Are the two data sets identical? 
+all.equal(siteDF,siteDF2)
+```
+Fantastic - the two data sets are identical and I will therefore remove "../Data/2020-10-20/df2_new.csv" (as its already in the parent folder "../Data"). Moreover, I will duplicate this csv file, name the duplicated file **survey_site_raw.csv** and put it in the parent folder "../Data/rawData".
+
+
+#### siteDF / df2_new : surveyDF
+
+```{r temp-check-dataSets-siteDF-VS-survey_site_data_xeno_v1, cache=TRUE}
+# Used in below analyses
+siteDF <- read.csv("../Data/df2_new.csv")
+
+# Sent by Tom 20 Oct
+surveyDF <- read.csv("../Data/2020-10-20/survey_site_data_xeno_v1.csv")
+
+#### Are the two data sets identical? 
+isTRUE(all.equal(siteDF,surveyDF))
+
+
+# In what way do they differ? 
+require(arsenal)
+summary(comparedf(siteDF,surveyDF))
+```
+
+SurveyDF and SiteDF have the same number of observations (296; 1 per survey). However, surveyDF has 9 fewer columns than SiteDF. SiteDF has one X column (row name), four columns specifying the number of *Bulinus* spp. individuals collected and tested for *Schistosoma* spp. infection per survey, and five columns detailing *Schistosoma* spp. prevalence among *Bulinus* spp. individuals per survey. surveyDF has one column not present in SiteDF: the column "surveyed" specifying whether or not all sites were surveyed at each of the four survey occations. As these rows are removed from the SiteDF data set before analyses, SiteDF is identical but more informative than SurveyDF and SurveyDF will therefore no longer be used and not included in the final parent folder "../Data/rawData".
+
+
+
+#### shehiaRaw / shehia_school_data_v1
+
+```{r temp-check-dataSets-shehia_school_data_v1, cache=TRUE}
+# Used in 02 analyses
+shehiaDF <- read.csv("../Data/shehia_school_data_v1.csv")
+
+# Sent by Tom 20 Oct
+shehiaDF2 <- read.csv("../Data/2020-10-20/shehia_school_data_v1.csv")
+
+#### Are the two data sets identical? 
+all.equal(shehiaDF,shehiaDF2)
+```
+The two data sets are identical and I will therefore remove "../Data/2020-10-20/shehia_school_data_v1.csv" (as its already in the parent folder "../Data"). Moreover, I will duplicate this csv file, name the duplicated file **shehia_school_raw.csv** and put it in the parent folder "../Data/rawData".
+
+#### snailRaw / snail_data_xeno_v1
+
+```{r temp-check-dataSets-snail_data_xeno_v1, cache=TRUE}
+# Used in 02 analyses
+snailDF <- read.csv("../Data/snail_data_xeno_v1.csv")
+
+# Sent by Tom 20 Oct
+snailDF2 <- read.csv("../Data/2020-10-20/snail_data_xeno_v1.csv")
+
+#### Are the two data sets identical? 
+all.equal(snailDF,snailDF2)
+```
+The two data sets are identical and I will therefore remove "../Data/2020-10-20/snail_data_xeno_v1.csv" (as its already in the parent folder "../Data"). Moreover, I will duplicate this csv file, name the duplicated file **snail_xeno_raw.csv** and put it in the parent folder "../Data/rawData".

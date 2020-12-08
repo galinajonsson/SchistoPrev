@@ -24,6 +24,10 @@ output:
 * https://cran.r-project.org/web/packages/DHARMa/vignettes/DHARMa.html  
 * https://cran.r-project.org/web/packages/DHARMa/DHARMa.pdf#page=29&zoom=100,133,242  
 * https://cran.r-project.org/web/packages/glmmTMB/vignettes/glmmTMB.pdf  
+* https://cran.r-project.org/web/packages/glmmTMB/vignettes/model_evaluation.pdf (Added **December 2020**)  
+* https://stats.idre.ucla.edu/r/dae/zinb/ (Added **December 2020**)   
+* https://journal.r-project.org/archive/2017/RJ-2017-066/RJ-2017-066.pdf (Added **December 2020**)   
+* https://stats.stackexchange.com/questions/399918/glmms-for-count-data-with-glmmtmb-random-slopes-specification-cross-level-inte (Added **December 2020**)  
 
 
 

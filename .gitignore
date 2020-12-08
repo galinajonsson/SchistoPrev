@@ -5,9 +5,12 @@
 *.csv.zip
 
 # Ignore rdm file for internal data file validation
-*Analyses/hidden_DataFileCheck.Rdm
+*Analyses/hidden_DataFileCheck.Rmd
 
-# Ignore word files
+# Ignore old rdm versions named "TempTomP"
+*Analyses/TempTomP.Rmd
+
+# Ignore text files
 *.docx
 *.rtf
 

@@ -1,9 +1,10 @@
 # Schistosomoes Prevalence
 
-Author(s): [Galina M. Jönsson](https://github.com/galinajonsson) insert MORE
+Author(s): [Galina M. Jönsson](https://github.com/galinajonsson) and [Tom Pennance](https://github.com/tompennance) 
+
 
 This repository contains all the code and some data for:
-
+**Insert manuscript info**
 
 
 ## Data
@@ -19,6 +20,7 @@ The analyses code is divided into .Rmd files that run the analyses for each sect
 * __01-data-cleaning-Rdm__ cleans and standardises the georeferenced data.
 * __02-format-model.Rdm__ formats the clean data and runs the models.
 * __03-summaries.Rmd__ summarises the data used in models and model outputs.
+
 
 ##### Code for figures
 

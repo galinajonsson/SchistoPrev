@@ -246,14 +246,14 @@ snailDF.na <- droplevels(snailDF.na)
 
 
 ### Inspect response variable
-The response variable used in these analyses is "Sh_all", which denotes whether **TOM** fill in please. 
+The response variable used in these analyses is "Sh_all", which denotes whether each snail was infected (1) or (0). 
 
 As we will be preforming our model selection using the snailDF.na data set, we inspect its variables. 
 ```{r respvar, cache=TRUE, message=FALSE}
 require(ggplot2)
 require(dplyr)
 
-### How many **TOM** fill in please are **infected**? 
+### How many are infected (1) and not (0)? 
 snailDF.na %>% 
   mutate(y = Sh_all %>% as.character()) %>% 
   ggplot(aes(x = Sh_all)) +
@@ -279,13 +279,13 @@ table(snailDF.na$Sh_all)
 
 #### Explanatory variables of potential interest
 **TOM** can you modify these explanations so that they are correct please? 
-* **wlevel** -> water level    
-* **wbtype2** -> waterbody type: either permanent or temporary    
+* **wlevel** -> water level (ordered categorical expressed as numeric 1:4, where 1 denotes flooded, 2 = normal, 3 = low, 4= dry)    
+* **wbtype2** -> waterbody type: either permanent (1) or temporary (0)    
 * **syrvey** -> four surveys; corresponds to time of year; potentially correlated with wlevel and wbtype2    
-* **temp** -> water temperature   
+* **temp** -> water temperature (*C)   
 * **cond** -> conductivity; indirect measure of water chemistry   
 * **ph** -> potentially correlated with conductivity   
-* **type** -> human response to treatment; whether people got reinfected quickly or not; four categories    
+* **type** -> human response to treatment per shehia; whether people got reinfected quickly or not; four categories    
 * **tds** -> total dissolved substances; likely correlated with cond and/or sal    
 * **sal** -> water salinity; likely correlated with tds, pH and/or sal   
 * **flow** -> water flow in four categories   
@@ -372,7 +372,7 @@ Among the qualitative and quantitative explanatory variables, only temperature a
 The variables used in initial model selection are as follows: 
 
 #### Response variable 
-* **Sh_all** -> **TOM** fill in please. 
+* **Sh_all** -> , which denotes whether each snail was infected (1) or (0). 
 
 
 #### Explanatory variables of potential interest
@@ -408,7 +408,7 @@ The variables used in initial model selection are as follows:
 * **site** -> sites within shesias; hence, site is nested within shehia in models
 
 
-Given the variables described above, we must use a type of generalised linear mixed effects model to test what effects **Sh_all** **TOM** fill in please. . 
+Given the variables described above, we must use a type of generalized linear mixed effects model to test what effects **Sh_all**, i.e. whether snails are infected or not. 
 
 
 
@@ -426,11 +426,11 @@ Given the inherently "low information content" of binary data, we will fit our b
 We apply prior distributions to all explanatory variables of potential interest that reflect our actual beliefs and understandings. Our explanatory variables and prior specifications are as follows:
 * **wlevel** -> water level    
 * **wbtype2** -> waterbody type: either permanent or temporary    
-* **syrvey** -> four surveys; corresponds to time of year; potentially correlated with wlevel and wbtype2; this variable will not be dropped in any model simplification as it accounts for **known differences in ??????** (TOM!?) between different seasons.  
-* **temp** -> water temperature in degrees Celsius per survey within the range 22.33C to 33.81C. Although multiple authors (**TOM** examples) have shown that **TOM** the snail/the parasite is limited by temperature (BREIF EXPLINATION), we know/do not know whether it is within the temperature ranges tested here. As such we chose a prior distribution that reflects our this knowledge/lack thereof: a normal prior with mean 0/1/2/3/4**????** and standard deviation 10    
+* **syrvey** -> four surveys; corresponds to time of year; potentially correlated with wlevel and wbtype2; this variable will not be dropped in any model simplification as it accounts for known differences in between different seasons.  
+* **temp** -> water temperature in degrees Celsius per survey within the range 22.33C to 33.81C. Although multiple authors have shown that the interplay between the snail:parasite is limited by temperature (mechanism not confirmed), we know/do not know whether it is within the temperature ranges tested here. As such we chose a prior distribution that reflects our this knowledge/lack thereof: a normal prior with mean 0/1/2/3/4 and standard deviation 10. **UPDATE MARCH 2022**: we will use an uninformative prior because its hypothesis-based and existing research is on another species: a normal prior with mean 0 and standard deviation 10. 
 * **cond** -> conductivity, which is an indirect measure of water chemistry   
 * **ph** ->  
-* **type** -> human response to treatment (i.e. the degree to which infected individuals became reinfected) per shehia, which is divided into four categories. We expect responses to treatment to be an indirect measure of human behavior (**TOM!!??**), such that individuals inhabiting shesias with low rates of reinfection are more likely to exhibit less "risky" behaviors compared to those inhabiting Shesias with high rates of reinfection. Hence, we use a       
+* **type** -> human response to treatment (i.e. the degree to which infected individuals became reinfected) per shehia, which is divided into four categories. We expect responses to treatment to be an indirect measure of human behavior , such that individuals inhabiting shesias with low rates of reinfection are more likely to exhibit less "risky" behaviors compared to those inhabiting Shesias with high rates of reinfection. **UPDATE MARCH 2022**: we will use an uninformative prior because its hypothesis-driven: a normal prior with mean 0 and standard deviation 10. Hence, we use a       
 
 (set_prior("normal(0,10)", class = "b"
 

@@ -9,7 +9,7 @@ output:
     toc_float: true
 ---
 
-## The data
+## Tidy and format raw data
 
 Load and tidy the data. These analyses are based on the data sets, each of which contains data on different levels: snail-level, survey-level and Shehia-level. We therefore start by loading each one in turn and assigning all variables within a data set the correct class.
 
@@ -297,6 +297,7 @@ table(snailDF.na$Sh_all)
 
 
 **IF POSSIBLE** 
+#### Note: these variables will not be included in model fitting
 \n
 \n
 * **Bfor_pres** -> This will be duplicated in the 'othersnail' column since that is a summary stat of any other snail species present, but this species presence may be of particular interest out of the other snail species... This is another closely related Bulinus species Bulinus forskalii that does not transmit schistosomes on Pemba (although does in West Africa) - however its presence in Pemba might confuse the schistosomes if release similar attractants to the other Bulinus species making the miracidia attempt to infect them. This a very loose theory but could be interesting! :)    
@@ -367,15 +368,16 @@ The majority of explanatory quantitative variables are correlated (p<0.001), and
 Among the qualitative and quantitative explanatory variables, only temperature and depth appear correlated.
 
 
-## Model fitting and selection
+# Model fitting and selection
 
+## Viariables
 The variables used in initial model selection are as follows: 
 
-#### Response variable 
+### Response variable 
 * **Sh_all** -> , which denotes whether each snail was infected (1) or (0). 
 
 
-#### Explanatory variables of potential interest
+### Explanatory variables of potential interest
 **TOM** can you modify these explanations so that they are correct please? 
 * **wlevel** -> water level    
 * **wbtype2** -> waterbody type: either permanent or temporary    
@@ -384,8 +386,8 @@ The variables used in initial model selection are as follows:
 * **cond** -> conductivity; indirect measure of water chemistry   
 * **ph** -> potentially correlated with conductivity   
 * **type** -> human response to treatment; whether people got reinfected quickly or not; four categories    
-* **flow** -> water flow in four categories   
-* **depth** -> water depth in three categories; likely correlated with wbtype2   
+* **flow** -> water flow; four categories   
+* **depth** -> water depth; three categories; likely correlated with wbtype2   
 * **Swimmingplaying** -> water contract will increase likelihood of snail infection - also this is children swimming and playing and these are the higher risk group for infections based on the disease endemicity (INFORMATIVE PRIOR)   
 * **bathing** -> water contract will increase likelihood of snail infection, however people may also be less likely to urinate in these areas because people bathing in them? I would suggest we go with INFORMATIVE that it will increase snail infection now though since there is water contact happening and this is key   
 * **othersnail** -> uninformative - presence of other snails may cause 'miracidial sponges' (when schistosomes infect the wrong snail species), however just theory based so we shouldn't use as a prior, but the outcome of model will be interesting.   
@@ -403,7 +405,7 @@ The variables used in initial model selection are as follows:
 * **otherfarming** -> uninformative   
 
 
-#### Random factors   
+### Random factors   
 * **shehia** -> regions/wards on Pemba
 * **site** -> sites within shesias; hence, site is nested within shehia in models
 
@@ -418,7 +420,7 @@ Given the variables described above, we must use a type of generalized linear mi
 As our data is binary (1 is an individual snail is infected and 0 if not), the choice of distribution (family) is straight forward: we will use a binomial distribution. The link function we will use will depend on the flexibility of model implementation (see below). We will initially try the logit link function; however, given that the logit link function may be inappropriate when the numbers of zeroes and ones are very unequal (as our data is), if possible, we will also try the clog-log and clog-clog links. 
 
 
-### Model implementation selection
+## Model implementation - selection
 Given the inherently "low information content" of binary data, we will fit our binomial generalised linear mixed effects model using Bayesian inferences. We will use the R package "brms", which implements Bayesian generalized linear mixed models using the probabilistic programming language Stan. Please see the [brms github page](https://github.com/paul-buerkner/brms) for software installation guides (available for multiple operation systems). Moreover, "brms" allows model fit to be assessed and compared with the Watanabe-Akaike-Information Criterion (WAIC) and leave-one-out cross-validation (LOO).
 
 
@@ -455,9 +457,9 @@ We apply prior distributions to all explanatory variables of potential interest 
 
 ### Bayesian Binary logistic Regression (with Non-Informative Priors)
 
-First, we run a model with uninformative priors fitted to all paraeters. Each random effect of each grouping factor has a standard deviation parameter, which is restricted to be non-negative and, by default, has a half Cauchy prior with a scale parameter that scales with the standard deviation of the response variable. 
+First, we run a model with uninformative priors fitted to all parameters. Each random effect of each grouping factor has a standard deviation parameter, which is restricted to be non-negative and, by default, has a half Cauchy prior with a scale parameter that scales with the standard deviation of the response variable. 
 
-```{r Sh_all-UNINF-fit, message=FALSE, warning=FALSE, cache=TRUE, eval=FALSE}
+```{r Sh_all-UNINF-fit, message=FALSE, warning=FALSE, cache=TRUE, eval=FALSE, echo=FALSE}
 require("brms")
 
 ### Fit a maximal model with uninformative priors 
@@ -478,7 +480,7 @@ max.noInfo <-
       seed = 666) # specifies the random seed, allowing for replication of results
 
 # Save object
-saveRDS(max.noInfo, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.rds")
+#saveRDS(max.noInfo, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.rds")
 ```
 
 
@@ -487,7 +489,7 @@ saveRDS(max.noInfo, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.rds")
 
 
 
-```{r Sh_all-UNINF-eval, message=FALSE, warning=FALSE, cache=TRUE}
+```{r Sh_all-UNINF-eval, message=FALSE, warning=FALSE, cache=TRUE, echo=FALSE}
 require("brms")
 
 # Read the maximal model file with no informative priors
@@ -500,14 +502,13 @@ summary(max.noInfo)
 plot(max.noInfo)
 ```
 
-Interestingly, the model does not seem to struggle to converge despite the large number of explanatory variables  as evident from Rhat values of 1 and "furry caterpillars" but 95% credible intervals overlap zero for nearly all variables, indicating that we could certainly get rid of some variables. We do this using leave-one-out cross-validation (LOO) but first we must refit the maximal model dropping each explanatory variable in turn. The three variables that do not overlap zero: depth, temperature and Bfor_pres will not be dropped initially.  
+Interestingly, the model does not seem to struggle to converge despite the large number of explanatory variables  as evident from Rhat values of 1 and "furry caterpillars" but 95% credible intervals overlap zero for nearly all variables, indicating that we could certainly get rid of some variables. We do this using leave-one-out cross-validation (LOOCV) but first we must refit the maximal model dropping each explanatory variable in turn. The five variables that do not, or only marginally, overlap zero (wlevel, depth, temperature, ph and Bfor_pres) will not be dropped initially.  
 
 
 
 
-```{r Sh_all-UNINF-drop1, message=FALSE, warning=FALSE, cache=TRUE, eval=FALSE}
+```{r Sh_all-UNINF-drop1, message=FALSE, warning=FALSE, cache=TRUE, eval=FALSE, echo=FALSE}
 require("brms")
-
 ### Drop wbtype2
 max.noInfo.wbtype2 <-
   brm(data = snailDF.na, 
@@ -524,278 +525,246 @@ max.noInfo.wbtype2 <-
       chains = 3, # number of MCMC 
       inits  = 0, # inits specifies the starting values of the iterations (normally you can either use the maximum likelihood estimates of the parameters as starting values, or simply ask the algorithm to start with zeros)
       seed = 666) # specifies the random seed, allowing for replication of results
-
 # Save object
 saveRDS(max.noInfo.wbtype2, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.wbtype2.rds")
-
-
-
 
 ### Drop wlevel
 max.noInfo.wlevel <-
   brm(data = snailDF.na, 
-      family = bernoulli(link = logit), # specify bernoulli (not binomial) for a binary logistic regression
-      formula = Sh_all ~ # Response variable
-        wbtype2 + type + survey + flow + depth +
-            temp + cond + ph + 
-              swimmingplaying + bathing + other_snail +
-              Bfor_pres + clothes + dishes + collectingwater +
-              Ricecult + otherfarming +
-            (1|shehia/site), # Random factor
-      warmup = 5000, # burn-in period (i.e. iterations to be discarded)
-      iter = 15000, # total number of iterations (including burn-in)
-      chains = 3, # number of MCMC 
-      inits  = 0, # inits specifies the starting values of the iterations (normally you can either use the maximum likelihood estimates of the parameters as starting values, or simply ask the algorithm to start with zeros)
-      seed = 666) # specifies the random seed, allowing for replication of results
-
+      family = bernoulli(link = logit), 
+      formula = Sh_all ~ 
+        wbtype2 + type + survey + flow + depth + temp + cond + ph + 
+        swimmingplaying + bathing + other_snail + Bfor_pres + 
+        clothes + dishes + collectingwater + Ricecult + otherfarming +
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
 # Save object
 saveRDS(max.noInfo.wlevel, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.wlevel.rds")
-
-
-
 
 ### Drop type
 max.noInfo.type <-
   brm(data = snailDF.na, 
-      family = bernoulli(link = logit), # specify bernoulli (not binomial) for a binary logistic regression
-      formula = Sh_all ~ # Response variable
-        wbtype2 + wlevel + survey + flow + depth +
-            temp + cond + ph + 
-              swimmingplaying + bathing + other_snail +
-              Bfor_pres + clothes + dishes + collectingwater +
-              Ricecult + otherfarming +
-            (1|shehia/site), # Random factor
-      warmup = 5000, # burn-in period (i.e. iterations to be discarded)
-      iter = 15000, # total number of iterations (including burn-in)
-      chains = 3, # number of MCMC 
-      inits  = 0, # inits specifies the starting values of the iterations (normally you can either use the maximum likelihood estimates of the parameters as starting values, or simply ask the algorithm to start with zeros)
-      seed = 666) # specifies the random seed, allowing for replication of results
-
+      family = bernoulli(link = logit), 
+      formula = Sh_all ~ 
+        wlevel + wbtype2 + survey + flow + depth + temp + cond + ph + 
+        swimmingplaying + bathing + other_snail + Bfor_pres + 
+        clothes + dishes + collectingwater + Ricecult + otherfarming +
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
 # Save object
 saveRDS(max.noInfo.type, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.type.rds")
-
-
-
 
 ### Drop flow
 max.noInfo.flow <-
   brm(data = snailDF.na, 
-      family = bernoulli(link = logit), # specify bernoulli (not binomial) for a binary logistic regression
-      formula = Sh_all ~ # Response variable
-        wbtype2 + wlevel + type + survey + depth +
-            temp + cond + ph + 
-              swimmingplaying + bathing + other_snail +
-              Bfor_pres + clothes + dishes + collectingwater +
-              Ricecult + otherfarming +
-            (1|shehia/site), # Random factor
-      warmup = 5000, # burn-in period (i.e. iterations to be discarded)
-      iter = 15000, # total number of iterations (including burn-in)
-      chains = 3, # number of MCMC 
-      inits  = 0, # inits specifies the starting values of the iterations (normally you can either use the maximum likelihood estimates of the parameters as starting values, or simply ask the algorithm to start with zeros)
-      seed = 666) # specifies the random seed, allowing for replication of results
-
+      family = bernoulli(link = logit), 
+      formula = Sh_all ~ 
+        wlevel + wbtype2 + survey + type + depth + temp + cond + ph + 
+        swimmingplaying + bathing + other_snail + Bfor_pres + 
+        clothes + dishes + collectingwater + Ricecult + otherfarming +
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
 # Save object
 saveRDS(max.noInfo.flow, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.flow.rds")
-
-
-
-
-
-
 
 ### Drop depth
 max.noInfo.depth <-
   brm(data = snailDF.na, 
-      family = bernoulli(link = logit), # specify bernoulli (not binomial) for a binary logistic regression
-      formula = Sh_all ~ # Response variable
-        wbtype2 + wlevel + type + survey + flow +
-            temp + cond + ph + 
-              swimmingplaying + bathing + other_snail +
-              Bfor_pres + clothes + dishes + collectingwater +
-              Ricecult + otherfarming +
-            (1|shehia/site), # Random factor
-      warmup = 5000, # burn-in period (i.e. iterations to be discarded)
-      iter = 15000, # total number of iterations (including burn-in)
-      chains = 3, # number of MCMC 
-      inits  = 0, # inits specifies the starting values of the iterations (normally you can either use the maximum likelihood estimates of the parameters as starting values, or simply ask the algorithm to start with zeros)
-      seed = 666) # specifies the random seed, allowing for replication of results
-
+      family = bernoulli(link = logit), 
+      formula = Sh_all ~ 
+        wlevel + wbtype2 + survey + type + flow + temp + cond + ph + 
+        swimmingplaying + bathing + other_snail + Bfor_pres + 
+        clothes + dishes + collectingwater + Ricecult + otherfarming +
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666)
 # Save object
 saveRDS(max.noInfo.depth, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.depth.rds")
-
-
-
-
-
-
 
 ### Drop temp
 max.noInfo.temp <-
   brm(data = snailDF.na, 
-      family = bernoulli(link = logit), # specify bernoulli (not binomial) for a binary logistic regression
-      formula = Sh_all ~ # Response variable
-        wbtype2 + wlevel + type + survey + flow + depth +
-             cond + ph + 
-              swimmingplaying + bathing + other_snail +
-              Bfor_pres + clothes + dishes + collectingwater +
-              Ricecult + otherfarming +
-            (1|shehia/site), # Random factor
-      warmup = 5000, # burn-in period (i.e. iterations to be discarded)
-      iter = 15000, # total number of iterations (including burn-in)
-      chains = 3, # number of MCMC 
-      inits  = 0, # inits specifies the starting values of the iterations (normally you can either use the maximum likelihood estimates of the parameters as starting values, or simply ask the algorithm to start with zeros)
-      seed = 666) # specifies the random seed, allowing for replication of results
-
+      family = bernoulli(link = logit), 
+      formula = Sh_all ~ 
+        wlevel + wbtype2 + survey + type + flow + depth + cond + ph + 
+        swimmingplaying + bathing + other_snail + Bfor_pres + 
+        clothes + dishes + collectingwater + Ricecult + otherfarming +
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666)
 # Save object
 saveRDS(max.noInfo.temp, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.temp.rds")
-
-
-
-
-
-
 
 ### Drop cond
 max.noInfo.cond <-
   brm(data = snailDF.na, 
-      family = bernoulli(link = logit), # specify bernoulli (not binomial) for a binary logistic regression
-      formula = Sh_all ~ # Response variable
-        wbtype2 + wlevel + type + survey + flow + depth +
-             temp + ph + 
-              swimmingplaying + bathing + other_snail +
-              Bfor_pres + clothes + dishes + collectingwater +
-              Ricecult + otherfarming +
-            (1|shehia/site), # Random factor
-      warmup = 5000, # burn-in period (i.e. iterations to be discarded)
-      iter = 15000, # total number of iterations (including burn-in)
-      chains = 3, # number of MCMC 
-      inits  = 0, # inits specifies the starting values of the iterations (normally you can either use the maximum likelihood estimates of the parameters as starting values, or simply ask the algorithm to start with zeros)
-      seed = 666) # specifies the random seed, allowing for replication of results
-
+      family = bernoulli(link = logit), 
+      formula = Sh_all ~ 
+        wlevel + wbtype2 + survey + type + flow + depth + temp + ph + 
+        swimmingplaying + bathing + other_snail + Bfor_pres + 
+        clothes + dishes + collectingwater + Ricecult + otherfarming +
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666)
 # Save object
 saveRDS(max.noInfo.cond, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.cond.rds")
-
-
-
-
-
-
 
 ### Drop ph
 max.noInfo.ph <-
   brm(data = snailDF.na, 
-      family = bernoulli(link = logit), # specify bernoulli (not binomial) for a binary logistic regression
-      formula = Sh_all ~ # Response variable
-        wbtype2 + wlevel + type + survey + flow + depth +
-             temp + cond + 
-              swimmingplaying + bathing + other_snail +
-              Bfor_pres + clothes + dishes + collectingwater +
-              Ricecult + otherfarming +
-            (1|shehia/site), # Random factor
-      warmup = 5000, # burn-in period (i.e. iterations to be discarded)
-      iter = 15000, # total number of iterations (including burn-in)
-      chains = 3, # number of MCMC 
-      inits  = 0, # inits specifies the starting values of the iterations (normally you can either use the maximum likelihood estimates of the parameters as starting values, or simply ask the algorithm to start with zeros)
-      seed = 666) # specifies the random seed, allowing for replication of results
-
+      family = bernoulli(link = logit), 
+      formula = Sh_all ~ 
+        wlevel + wbtype2 + survey + type + flow + depth + temp + cond + 
+        swimmingplaying + bathing + other_snail + Bfor_pres + 
+        clothes + dishes + collectingwater + Ricecult + otherfarming +
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666)
 # Save object
 saveRDS(max.noInfo.ph, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.ph.rds")
-
-
-
-
-
-
 
 ### Drop swimmingplaying
 max.noInfo.swimmingplaying <-
   brm(data = snailDF.na, 
-      family = bernoulli(link = logit), # specify bernoulli (not binomial) for a binary logistic regression
-      formula = Sh_all ~ # Response variable
-        wbtype2 + wlevel + type + survey + flow + depth +
-             temp + cond + ph + 
-              bathing + other_snail +
-              Bfor_pres + clothes + dishes + collectingwater +
-              Ricecult + otherfarming +
-            (1|shehia/site), # Random factor
-      warmup = 5000, # burn-in period (i.e. iterations to be discarded)
-      iter = 15000, # total number of iterations (including burn-in)
-      chains = 3, # number of MCMC 
-      inits  = 0, # inits specifies the starting values of the iterations (normally you can either use the maximum likelihood estimates of the parameters as starting values, or simply ask the algorithm to start with zeros)
-      seed = 666) # specifies the random seed, allowing for replication of results
-
+      family = bernoulli(link = logit), 
+      formula = Sh_all ~ 
+        wlevel + wbtype2 + survey + type + flow + depth + temp + cond + ph +
+        bathing + other_snail + Bfor_pres + 
+        clothes + dishes + collectingwater + Ricecult + otherfarming +
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666)
 # Save object
 saveRDS(max.noInfo.swimmingplaying, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.swimmingplaying.rds")
-
-
-
-
-
-
 
 ### Drop bathing
 max.noInfo.bathing <-
   brm(data = snailDF.na, 
-      family = bernoulli(link = logit), # specify bernoulli (not binomial) for a binary logistic regression
-      formula = Sh_all ~ # Response variable
-        wbtype2 + wlevel + type + survey + flow + depth +
-             temp + cond + ph + 
-              swimmingplaying + other_snail +
-              Bfor_pres + clothes + dishes + collectingwater +
-              Ricecult + otherfarming +
-            (1|shehia/site), # Random factor
-      warmup = 5000, # burn-in period (i.e. iterations to be discarded)
-      iter = 15000, # total number of iterations (including burn-in)
-      chains = 3, # number of MCMC 
-      inits  = 0, # inits specifies the starting values of the iterations (normally you can either use the maximum likelihood estimates of the parameters as starting values, or simply ask the algorithm to start with zeros)
-      seed = 666) # specifies the random seed, allowing for replication of results
-
+      family = bernoulli(link = logit), 
+      formula = Sh_all ~ 
+        wlevel + wbtype2 + survey + type + flow + depth + temp + cond + ph +
+        swimmingplaying + other_snail + Bfor_pres + 
+        clothes + dishes + collectingwater + Ricecult + otherfarming +
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666)
 # Save object
 saveRDS(max.noInfo.bathing, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.bathing.rds")
-
-
-
-
-
-
 
 ### Drop other_snail
 max.noInfo.other_snail <-
   brm(data = snailDF.na, 
-      family = bernoulli(link = logit), # specify bernoulli (not binomial) for a binary logistic regression
-      formula = Sh_all ~ # Response variable
-        wbtype2 + wlevel + type + survey + flow + depth +
-             temp + cond + ph + 
-              swimmingplaying + bathing +
-              Bfor_pres + clothes + dishes + collectingwater +
-              Ricecult + otherfarming +
-            (1|shehia/site), # Random factor
-      warmup = 5000, # burn-in period (i.e. iterations to be discarded)
-      iter = 15000, # total number of iterations (including burn-in)
-      chains = 3, # number of MCMC 
-      inits  = 0, # inits specifies the starting values of the iterations (normally you can either use the maximum likelihood estimates of the parameters as starting values, or simply ask the algorithm to start with zeros)
-      seed = 666) # specifies the random seed, allowing for replication of results
-
+      family = bernoulli(link = logit), 
+      formula = Sh_all ~ 
+        wlevel + wbtype2 + survey + type + flow + depth + temp + cond + ph +
+        swimmingplaying + bathing + Bfor_pres + 
+        clothes + dishes + collectingwater + Ricecult + otherfarming +
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666)
 # Save object
 saveRDS(max.noInfo.other_snail, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.other_snail.rds")
-
-
-
-
-
-
 
 ### Drop Bfor_pres
 max.noInfo.Bfor_pres <-
   brm(data = snailDF.na, 
+      family = bernoulli(link = logit), 
+      formula = Sh_all ~ 
+        wlevel + wbtype2 + survey + type + flow + depth + temp + cond + ph +
+        swimmingplaying + bathing + other_snail + 
+        clothes + dishes + collectingwater + Ricecult + otherfarming +
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666)
+# Save object
+saveRDS(max.noInfo.Bfor_pres, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.Bfor_pres.rds")
+
+### Drop clothes (LOL)
+max.noInfo.clothes <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit), 
+      formula = Sh_all ~
+        wlevel + wbtype2 + survey + type + flow + depth + temp + cond + ph +
+        swimmingplaying + bathing + other_snail + Bfor_pres + 
+        dishes + collectingwater + Ricecult + otherfarming +
+# Save object
+saveRDS(max.noInfo.clothes, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.clothes.rds")
+
+### Drop dishes
+max.noInfo.dishes <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit), 
+      formula = Sh_all ~
+        wlevel + wbtype2 + survey + type + flow + depth + temp + cond + ph +
+        swimmingplaying + bathing + other_snail + Bfor_pres + 
+        clothes + collectingwater + Ricecult + otherfarming +
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666)
+# Save object
+saveRDS(max.noInfo.dishes, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.dishes.rds")
+####################################################################
+
+### Drop collectingwater
+max.noInfo.dishes <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit), 
+      formula = Sh_all ~
+        wlevel + wbtype2 + survey + type + flow + depth + temp + cond + ph +
+        swimmingplaying + bathing + other_snail + Bfor_pres + 
+        clothes + dishes + Ricecult + otherfarming +
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666)
+# Save object
+saveRDS(max.noInfo.collectingwater, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.collectingwater.rds")
+
+
+### Drop Ricecult
+max.noInfo.ricecult <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit), 
+      formula = Sh_all ~
+        wlevel + wbtype2 + survey + type + flow + depth + temp + cond + ph +
+        swimmingplaying + bathing + other_snail + Bfor_pres + 
+        clothes + dishes + collectingwater + otherfarming +
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666)
+# Save object
+saveRDS(max.noInfo.ricecult, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.ricecult.rds")
+
+
+### Drop otherfarming
+max.noInfo.otherfarming <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit), 
+      formula = Sh_all ~
+        wlevel + wbtype2 + survey + type + flow + depth + temp + cond + ph +
+        swimmingplaying + bathing + other_snail + Bfor_pres + 
+        clothes + dishes + collectingwater + Ricecult +
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666)
+# Save object
+saveRDS(max.noInfo.otherfarming, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.otherfarming.rds")
+```
+
+\n
+\n
+
+
+
+
+
+
+
+
+
+
+
+## Maximal-minimal round 1
+
+### Fit maximal model
+```{r Sh_all-drop1-max-fit, message=FALSE, warning=FALSE, cache=TRUE, eval=FALSE}
+require("brms")
+
+### Maximal
+max1st <-
+  brm(data = snailDF.na, 
       family = bernoulli(link = logit), # specify bernoulli (not binomial) for a binary logistic regression
       formula = Sh_all ~ # Response variable
-        wbtype2 + wlevel + type + survey + flow + depth +
-             temp + cond + ph + 
-              swimmingplaying + bathing + other_snail +
-              clothes + dishes + collectingwater +
-              Ricecult + otherfarming +
-            (1|shehia/site), # Random factor
+        wbtype2 + wlevel + type + survey + flow + depth + temp + cond + ph + 
+        swimmingplaying + bathing + other_snail +
+        (1|shehia/site), # Random factor
       warmup = 5000, # burn-in period (i.e. iterations to be discarded)
       iter = 15000, # total number of iterations (including burn-in)
       chains = 3, # number of MCMC 
@@ -803,8 +772,906 @@ max.noInfo.Bfor_pres <-
       seed = 666) # specifies the random seed, allowing for replication of results
 
 # Save object
-saveRDS(max.noInfo.Bfor_pres, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.Bfor_pres.rds")
+#saveRDS(max1st, "../Data/ModelOutputs/InfectionPrevalence/max1st.rds")
 ```
+
+### Inspect maximal model
+```{r Sh_all-drop1-max, message=FALSE, warning=FALSE, cache=TRUE, eval=TRUE}
+require("brms")
+# Read model output
+max1st <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max1st.rds")
+
+# Quick look at the summary
+summary(max1st)
+
+# Plot the effect
+plot(max1st)
+```
+Interestingly, the model does not seem to struggle to converge despite the large number of explanatory variables  as evident from Rhat values of 1 and "furry caterpillars" but 95% credible intervals overlap zero for nearly all variables, indicating that we could certainly get rid of some variables. We do this using lPareto smoothed importance-sampling leave-one-out cross-validation (PSIS-LOO-CV) but first we must refit the maximal model dropping each explanatory variable in turn. The five variables that do not, or only marginally, overlap zero (wlevel, depth, temperature, ph and Bfor_pres) will not be dropped initially.  
+
+### Fit leave-one-out models
+```{r Sh_all-drop1, message=FALSE, warning=FALSE, cache=TRUE, eval=FALSE}
+require("brms")
+
+### Drop wbtype2
+max1st_drop_wbtype2 <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wlevel + type + survey + flow + depth + temp + cond + ph + 
+        swimmingplaying + bathing + other_snail +
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max1st_drop_wbtype2, "../Data/ModelOutputs/InfectionPrevalence/max1st_drop_wbtype2.rds")
+
+### Drop wlevel
+max1st_drop_wlevel <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wbtype2 + type + survey + flow + depth + temp + cond + ph + 
+        swimmingplaying + bathing + other_snail +
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max1st_drop_wlevel, "../Data/ModelOutputs/InfectionPrevalence/max1st_drop_wlevel.rds")
+
+### Drop type
+max1st_drop_type <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wbtype2 + wlevel + survey + flow + depth + temp + cond + ph + 
+        swimmingplaying + bathing + other_snail +
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max1st_drop_type, "../Data/ModelOutputs/InfectionPrevalence/max1st_drop_type.rds")
+
+### Drop flow
+max1st_drop_flow <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wbtype2 + wlevel + type + survey + depth + temp + cond + ph + 
+        swimmingplaying + bathing + other_snail +
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max1st_drop_flow, "../Data/ModelOutputs/InfectionPrevalence/max1st_drop_flow.rds")
+
+### Drop depth
+max1st_drop_depth <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wbtype2 + wlevel + type + survey + flow + temp + cond + ph + 
+        swimmingplaying + bathing + other_snail +
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max1st_drop_depth, "../Data/ModelOutputs/InfectionPrevalence/max1st_drop_depth.rds")
+
+### Drop temp
+max1st_drop_temp <- 
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wbtype2 + wlevel + type + survey + flow + depth + cond + ph + 
+        swimmingplaying + bathing + other_snail +
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max1st_drop_temp, "../Data/ModelOutputs/InfectionPrevalence/max1st_drop_temp.rds")
+
+### Drop cond
+max1st_drop_cond <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wbtype2 + wlevel + type + survey + flow + depth + temp + ph + 
+        swimmingplaying + bathing + other_snail +
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max1st_drop_cond, "../Data/ModelOutputs/InfectionPrevalence/max1st_drop_cond.rds")
+
+### Drop ph
+max1st_drop_ph <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wbtype2 + wlevel + type + survey + flow + depth + temp + cond + 
+        swimmingplaying + bathing + other_snail +
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max1st_drop_ph, "../Data/ModelOutputs/InfectionPrevalence/max1st_drop_ph.rds")
+
+### Drop swimmingplaying
+max1st_drop_swimmingplaying <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wbtype2 + wlevel + type + survey + flow + depth + temp + cond + ph + 
+        bathing + other_snail +
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max1st_drop_swimmingplaying, "../Data/ModelOutputs/InfectionPrevalence/max1st_drop_swimmingplaying.rds")
+
+### Drop bathing
+max1st_drop_bathing <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wbtype2 + wlevel + type + survey + flow + depth + temp + cond + ph + 
+        swimmingplaying + other_snail +
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max1st_drop_bathing, "../Data/ModelOutputs/InfectionPrevalence/max1st_drop_bathing.rds")
+
+### Drop other_snail
+max1st_drop_other_snail <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wbtype2 + wlevel + type + survey + flow + depth + temp + cond + ph + 
+        swimmingplaying + bathing +
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max1st_drop_other_snail, "../Data/ModelOutputs/InfectionPrevalence/max1st_drop_other_snail.rds")
+```
+
+
+
+
+### Model Comparison: Pareto smoothed importance-sampling leave-one-out cross-validation (PSIS-LOO) 
+
+
+We use the loo package to carry out Pareto smoothed importance-sampling leave-one-out cross-validation (PSIS-LOO) for purposes of model checking and model comparison.   
+- Reference: https://link.springer.com/article/10.1007/s11222-016-9696-4  
+- Useful link: https://mc-stan.org/loo/articles/loo2-example.html   
+We compare three models at a time for html markdown to knit because the process is computationally expensive and the Pareto smoothed importance-sampling objects are approx 1GB per model.
+
+
+
+
+```{r PSISLOO-1st, message=FALSE, warning=FALSE, cache=TRUE, eval=FALSE}
+require("brms")
+library("loo")
+# Read objects
+max1st_drop_wbtype2 <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max1st_drop_wbtype2.rds")
+max1st_drop_wlevel <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max1st_drop_wlevel.rds")
+max1st_drop_type <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max1st_drop_type.rds")
+max1st_drop_flow <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max1st_drop_flow.rds")
+max1st_drop_depth <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max1st_drop_depth.rds")
+max1st_drop_temp <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max1st_drop_temp.rds")
+max1st_drop_cond <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max1st_drop_cond.rds")
+max1st_drop_ph <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max1st_drop_ph.rds")
+max1st_drop_swimmingplaying <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max1st_drop_swimmingplaying.rds")
+max1st_drop_bathing <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max1st_drop_bathing.rds")
+max1st_drop_other_snail <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max1st_drop_other_snail.rds")
+
+# compute PSIS-LOO values with the loo function
+#loo_max.noInfo.flow <- loo(max.noInfo.flow, save_psis = TRUE)
+loo_max1st_drop_wbtype2 <- loo(max1st_drop_wbtype2, save_psis = TRUE)
+loo_max1st_drop_wlevel <- loo(max1st_drop_wlevel, save_psis = TRUE)
+loo_max1st_drop_type <- loo(max1st_drop_type, save_psis = TRUE)
+loo_max1st_drop_flow <- loo(max1st_drop_flow, save_psis = TRUE)
+loo_max1st_drop_depth <- loo(max1st_drop_depth, save_psis = TRUE)
+loo_max1st_drop_temp <- loo(max1st_drop_temp, save_psis = TRUE)
+loo_max1st_drop_cond <- loo(max1st_drop_cond, save_psis = TRUE)
+loo_max1st_drop_ph <- loo(max1st_drop_ph, save_psis = TRUE)
+loo_max1st_drop_swimmingplaying <- loo(max1st_drop_swimmingplaying, save_psis = TRUE)
+loo_max1st_drop_bathing <- loo(max1st_drop_bathing, save_psis = TRUE)
+loo_max1st_drop_other_snail <- loo(max1st_drop_other_snail, save_psis = TRUE)
+# Compare PSIS-LOO values
+loo_compare(loo_max1st_drop_wbtype2, loo_max1st_drop_wlevel, 
+            loo_max1st_drop_type, loo_max1st_drop_flow,
+            loo_max1st_drop_depth,  loo_max1st_drop_temp,
+            loo_max1st_drop_cond, loo_max1st_drop_ph,
+            loo_max1st_drop_swimmingplaying, loo_max1st_drop_bathing,
+            loo_max1st_drop_other_snail)
+```
+                            elpd_diff se_diff
+max1st_drop_flow             0.0       0.0   
+max1st_drop_other_snail     -2.4       1.2   
+max1st_drop_cond            -2.7       1.3   
+max1st_drop_bathing         -3.1       0.7   
+max1st_drop_type            -3.2       1.1   
+max1st_drop_wbtype2         -3.5       1.2   
+max1st_drop_ph              -3.6       1.8   
+max1st_drop_swimmingplaying -3.9       0.9   
+max1st_drop_temp            -5.0       3.3   
+max1st_drop_wlevel          -8.6       5.4   
+max1st_drop_depth           -9.7       5.3  
+
+## Maximal-minimal round 2
+
+### Inspect maximal model
+Lets have a look before dropping further variables
+```{r Sh_all-drop2-max, message=FALSE, warning=FALSE, cache=TRUE}
+require("brms")
+
+max1st_drop_flow <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max1st_drop_flow.rds")
+
+# Quick look at the summary
+summary(max1st_drop_flow)
+
+# Plot the effect
+plot(max1st_drop_flow)
+```
+
+
+### Fit leave-one-out models
+We're dropping flow first and re-running dropping eahc variable in turn
+```{r Sh_all-drop2, message=FALSE, warning=FALSE, cache=TRUE, eval=FALSE}
+require("brms")
+
+### Drop wbtype2
+max2nd_drop_wbtype2 <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wlevel + type + survey + depth + temp + cond + ph + 
+        swimmingplaying + bathing + other_snail +
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max2nd_drop_wbtype2, "../Data/ModelOutputs/InfectionPrevalence/max2nd_drop_wbtype2.rds")
+
+### Drop wlevel
+max2nd_drop_wlevel <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wbtype2 + type + survey + depth + temp + cond + ph + 
+        swimmingplaying + bathing + other_snail +
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max2nd_drop_wlevel, "../Data/ModelOutputs/InfectionPrevalence/max2nd_drop_wlevel.rds")
+
+### Drop type
+max2nd_drop_type <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wbtype2 + wlevel + survey + depth + temp + cond + ph + 
+        swimmingplaying + bathing + other_snail +
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max2nd_drop_type, "../Data/ModelOutputs/InfectionPrevalence/max2nd_drop_type.rds")
+
+### Drop depth
+max2nd_drop_depth <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wbtype2 + wlevel + type + survey + temp + cond + ph + 
+        swimmingplaying + bathing + other_snail +
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max2nd_drop_depth, "../Data/ModelOutputs/InfectionPrevalence/max2nd_drop_depth.rds")
+
+### Drop temp
+max2nd_drop_temp <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wbtype2 + wlevel + type + survey + depth + cond + ph + 
+        swimmingplaying + bathing + other_snail +
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max2nd_drop_temp, "../Data/ModelOutputs/InfectionPrevalence/max2nd_drop_temp.rds")
+
+### Drop cond
+max2nd_drop_cond <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wbtype2 + wlevel + type + survey + depth + temp + ph + 
+        swimmingplaying + bathing + other_snail +
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max2nd_drop_cond, "../Data/ModelOutputs/InfectionPrevalence/max2nd_drop_cond.rds")
+
+### Drop ph
+max2nd_drop_ph <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wbtype2 + wlevel + type + survey + depth + temp + cond + 
+        swimmingplaying + bathing + other_snail +
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max2nd_drop_ph, "../Data/ModelOutputs/InfectionPrevalence/max2nd_drop_ph.rds")
+
+### Drop swimmingplaying
+max2nd_drop_swimmingplaying <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wbtype2 + wlevel + type + survey + depth + temp + cond + ph + 
+        bathing + other_snail +
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max2nd_drop_swimmingplaying, "../Data/ModelOutputs/InfectionPrevalence/max2nd_drop_swimmingplaying.rds")
+
+### Drop bathing
+max2nd_drop_bathing <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wbtype2 + wlevel + type + survey + depth + temp + cond + ph + 
+        swimmingplaying + other_snail +
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max2nd_drop_bathing, "../Data/ModelOutputs/InfectionPrevalence/max2nd_drop_bathing.rds")
+
+### Drop other_snail
+max2nd_drop_other_snail <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wbtype2 + wlevel + type + survey + depth + temp + cond + ph + 
+        swimmingplaying + bathing + 
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max2nd_drop_other_snail, "../Data/ModelOutputs/InfectionPrevalence/max2nd_drop_other_snail.rds")
+```
+
+### Model Comparison: Pareto smoothed importance-sampling leave-one-out cross-validation (PSIS-LOO) 
+```{r PSISLOO-2nd, message=FALSE, warning=FALSE, cache=TRUE, eval=FALSE}
+require("brms")
+library("loo")
+# Read objects
+max1st_drop_flow <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max1st_drop_flow.rds")
+max2nd_drop_wbtype2 <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max2nd_drop_wbtype2.rds")
+max2nd_drop_wlevel <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max2nd_drop_wlevel.rds")
+max2nd_drop_type <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max2nd_drop_type.rds")
+max2nd_drop_depth <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max2nd_drop_depth.rds")
+max2nd_drop_temp <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max2nd_drop_temp.rds")
+max2nd_drop_cond <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max2nd_drop_cond.rds")
+max2nd_drop_ph <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max2nd_drop_ph.rds")
+max2nd_drop_swimmingplaying <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max2nd_drop_swimmingplaying.rds")
+max2nd_drop_bathing <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max2nd_drop_bathing.rds")
+max2nd_drop_other_snail <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max2nd_drop_other_snail.rds")
+# compute PSIS-LOO values with the loo function
+loo_max1st_drop_flow <- loo(max1st_drop_flow, save_psis = TRUE)
+loo_max2nd_drop_wbtype2 <- loo(max2nd_drop_wbtype2, save_psis = TRUE)
+loo_max2nd_drop_wlevel <- loo(max2nd_drop_wlevel, save_psis = TRUE)
+loo_max2nd_drop_type <- loo(max2nd_drop_type, save_psis = TRUE)
+loo_max2nd_drop_depth <- loo(max2nd_drop_depth, save_psis = TRUE)
+loo_max2nd_drop_temp <- loo(max2nd_drop_temp, save_psis = TRUE)
+loo_max2nd_drop_cond <- loo(max2nd_drop_cond, save_psis = TRUE)
+loo_max2nd_drop_ph <- loo(max2nd_drop_ph, save_psis = TRUE)
+loo_max2nd_drop_swimmingplaying <- loo(max2nd_drop_swimmingplaying, save_psis = TRUE)
+loo_max2nd_drop_bathing <- loo(max2nd_drop_bathing, save_psis = TRUE)
+loo_max2nd_drop_other_snail <- loo(max2nd_drop_other_snail, save_psis = TRUE)
+# Compare PSIS-LOO values
+loo_compare(loo_max1st_drop_flow, loo_max2nd_drop_wbtype2, 
+            loo_max2nd_drop_wlevel, loo_max2nd_drop_type, 
+            loo_max2nd_drop_depth,  loo_max2nd_drop_temp,
+            loo_max2nd_drop_cond, loo_max2nd_drop_ph,
+            loo_max2nd_drop_swimmingplaying, loo_max2nd_drop_bathing,
+            loo_max2nd_drop_other_snail)
+```
+                            elpd_diff se_diff
+max2nd_drop_other_snail      0.0       0.0   
+max2nd_drop_bathing         -0.5       0.7   
+max2nd_drop_type            -0.6       0.9   
+max2nd_drop_cond            -1.0       1.5   
+max2nd_drop_wbtype2         -1.2       0.9   
+max2nd_drop_swimmingplaying -1.2       0.8   
+max1st_drop_flow            -1.2       0.9   
+max2nd_drop_ph              -1.4       1.9   
+max2nd_drop_temp            -5.2       3.6   
+max2nd_drop_wlevel          -8.1       5.7   
+max2nd_drop_depth           -9.7       5.2  
+
+
+
+
+## Maximal-minimal round 3
+
+### Inspect maximal model
+Lets have a look before dropping further variables
+```{r Sh_all-drop3-max, message=FALSE, warning=FALSE, cache=TRUE}
+require("brms")
+
+max2nd_drop_other_snail <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max2nd_drop_other_snail.rds")
+
+# Quick look at the summary
+summary(max2nd_drop_other_snail)
+
+# Plot the effect
+plot(max2nd_drop_other_snail)
+```
+
+
+
+
+
+### Fit leave-one-out models
+We're dropping flow first and re-running dropping eahc variable in turn
+```{r Sh_all-drop3, message=FALSE, warning=FALSE, cache=TRUE, eval=FALSE}
+require("brms")
+
+### Drop wbtype2
+max3rd_drop_wbtype2 <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wlevel + type + survey + depth + temp + cond + ph + 
+        swimmingplaying + bathing + 
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max3rd_drop_wbtype2, "../Data/ModelOutputs/InfectionPrevalence/max3rd_drop_wbtype2.rds")
+
+### Drop wlevel
+max3rd_drop_wlevel <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wbtype2 + type + survey + depth + temp + cond + ph + 
+        swimmingplaying + bathing + 
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max3rd_drop_wlevel, "../Data/ModelOutputs/InfectionPrevalence/max3rd_drop_wlevel.rds")
+
+### Drop type
+max3rd_drop_type <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wbtype2 + wlevel + survey + depth + temp + cond + ph + 
+        swimmingplaying + bathing + 
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max3rd_drop_type, "../Data/ModelOutputs/InfectionPrevalence/max3rd_drop_type.rds")
+
+### Drop depth
+max3rd_drop_depth <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wbtype2 + wlevel + survey + type + temp + cond + ph + 
+        swimmingplaying + bathing + 
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max3rd_drop_depth, "../Data/ModelOutputs/InfectionPrevalence/max3rd_drop_depth.rds")
+
+### Drop temp
+max3rd_drop_temp <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wbtype2 + wlevel + survey + type + depth + cond + ph + 
+        swimmingplaying + bathing + 
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max3rd_drop_temp, "../Data/ModelOutputs/InfectionPrevalence/max3rd_drop_temp.rds")
+
+### Drop cond
+max3rd_drop_cond <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wbtype2 + wlevel + survey + type + depth + temp + ph + 
+        swimmingplaying + bathing + 
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max3rd_drop_cond, "../Data/ModelOutputs/InfectionPrevalence/max3rd_drop_cond.rds")
+
+### Drop ph
+max3rd_drop_ph <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wbtype2 + wlevel + survey + type + depth + temp + cond + 
+        swimmingplaying + bathing + 
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max3rd_drop_ph, "../Data/ModelOutputs/InfectionPrevalence/max3rd_drop_ph.rds")
+
+### Drop swimmingplaying
+max3rd_drop_swimmingplaying <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wbtype2 + wlevel + survey + type + depth + temp + cond + ph +
+        bathing + 
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max3rd_drop_swimmingplaying, "../Data/ModelOutputs/InfectionPrevalence/max3rd_drop_swimmingplaying.rds")
+
+### Drop bathing
+max3rd_drop_bathing <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wbtype2 + wlevel + survey + type + depth + temp + cond + ph +
+        swimmingplaying + 
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max3rd_drop_bathing, "../Data/ModelOutputs/InfectionPrevalence/max3rd_drop_bathing.rds")
+```
+
+
+### Model Comparison: Pareto smoothed importance-sampling leave-one-out cross-validation (PSIS-LOO) 
+```{r PSISLOO-3rd, message=FALSE, warning=FALSE, cache=TRUE, eval=FALSE}
+require("brms")
+library("loo")
+# Read objects
+max2nd_drop_other_snail <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max2nd_drop_other_snail.rds")
+max3rd_drop_wbtype2 <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max3rd_drop_wbtype2.rds")
+max3rd_drop_wlevel <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max3rd_drop_wlevel.rds")
+max3rd_drop_type <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max3rd_drop_type.rds")
+max3rd_drop_depth <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max3rd_drop_depth.rds")
+max3rd_drop_temp <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max3rd_drop_temp.rds")
+max3rd_drop_cond <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max3rd_drop_cond.rds")
+max3rd_drop_ph <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max3rd_drop_ph.rds")
+max3rd_drop_swimmingplaying <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max3rd_drop_swimmingplaying.rds")
+max3rd_drop_bathing <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max3rd_drop_bathing.rds")
+# compute PSIS-LOO values with the loo function
+loo_max2nd_drop_other_snail <- loo(max2nd_drop_other_snail, save_psis = TRUE)
+loo_max3rd_drop_wbtype2 <- loo(max3rd_drop_wbtype2, save_psis = TRUE)
+loo_max3rd_drop_wlevel <- loo(max3rd_drop_wlevel, save_psis = TRUE)
+loo_max3rd_drop_type <- loo(max3rd_drop_type, save_psis = TRUE)
+loo_max3rd_drop_depth <- loo(max3rd_drop_depth, save_psis = TRUE)
+loo_max3rd_drop_temp <- loo(max3rd_drop_temp, save_psis = TRUE)
+loo_max3rd_drop_cond <- loo(max3rd_drop_cond, save_psis = TRUE)
+loo_max3rd_drop_ph <- loo(max3rd_drop_ph, save_psis = TRUE)
+loo_max3rd_drop_swimmingplaying <- loo(max3rd_drop_swimmingplaying, save_psis = TRUE)
+loo_max3rd_drop_bathing <- loo(max3rd_drop_bathing, save_psis = TRUE)
+# Compare PSIS-LOO values
+loo_compare(loo_max2nd_drop_other_snail, loo_max3rd_drop_wbtype2, 
+            loo_max3rd_drop_wlevel, loo_max3rd_drop_type, 
+            loo_max3rd_drop_depth,  loo_max3rd_drop_temp,
+            loo_max3rd_drop_cond, loo_max3rd_drop_ph,
+            loo_max3rd_drop_swimmingplaying, loo_max3rd_drop_bathing)
+```
+                            elpd_diff se_diff
+max3rd_drop_cond              0.0       0.0  
+max3rd_drop_bathing          -0.4       0.9  
+max3rd_drop_type             -0.6       1.0  
+max2nd_drop_other_snail      -1.2       0.9  
+max3rd_drop_wbtype2          -1.3       1.2  
+max3rd_drop_swimmingplaying  -1.4       1.0  
+max3rd_drop_ph               -1.5       1.9  
+max3rd_drop_temp             -5.4       4.1  
+max3rd_drop_wlevel           -8.3       5.8  
+max3rd_drop_depth           -10.3       5.2 
+
+We're dropping cond
+
+
+## Maximal-minimal round 4
+
+### Inspect maximal model
+Lets have a look before dropping further variables
+```{r Sh_all-drop4-max, message=FALSE, warning=FALSE, cache=TRUE}
+require("brms")
+
+max3rd_drop_cond <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max3rd_drop_cond.rds")
+
+# Quick look at the summary
+summary(max3rd_drop_cond)
+
+# Plot the effect
+plot(max3rd_drop_cond)
+```
+
+
+
+### Fit leave-one-out models
+```{r Sh_all-drop4, message=FALSE, warning=FALSE, cache=TRUE, eval=FALSE}
+require("brms")
+
+### Drop wbtype2
+max4th_drop_wbtype2 <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wlevel + survey + type + depth + temp + ph + 
+        swimmingplaying + bathing + 
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max4th_drop_wbtype2, "../Data/ModelOutputs/InfectionPrevalence/max4th_drop_wbtype2.rds")
+
+### Drop wlevel
+max4th_drop_wlevel <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wbtype2 + type + survey + depth + temp + ph + 
+        swimmingplaying + bathing + 
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max4th_drop_wlevel, "../Data/ModelOutputs/InfectionPrevalence/max4th_drop_wlevel.rds")
+
+### Drop type
+max4th_drop_type <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wbtype2 + wlevel + survey + depth + temp + ph + 
+        swimmingplaying + bathing + 
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max4th_drop_type, "../Data/ModelOutputs/InfectionPrevalence/max4th_drop_type.rds")
+
+### Drop depth
+max4th_drop_depth <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wbtype2 + wlevel + survey + type + temp + ph + 
+        swimmingplaying + bathing + 
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max4th_drop_depth, "../Data/ModelOutputs/InfectionPrevalence/max4th_drop_depth.rds")
+
+### Drop temp
+max4th_drop_temp <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wbtype2 + wlevel + survey + type + depth + ph + 
+        swimmingplaying + bathing + 
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max4th_drop_temp, "../Data/ModelOutputs/InfectionPrevalence/max4th_drop_temp.rds")
+
+### Drop ph
+max4th_drop_ph <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wbtype2 + wlevel + survey + type + depth + temp + 
+        swimmingplaying + bathing + 
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max4th_drop_ph, "../Data/ModelOutputs/InfectionPrevalence/max4th_drop_ph.rds")
+
+### Drop swimmingplaying
+max4th_drop_swimmingplaying <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wbtype2 + wlevel + survey + type + depth + temp + ph +
+        bathing + 
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max4th_drop_swimmingplaying, "../Data/ModelOutputs/InfectionPrevalence/max4th_drop_swimmingplaying.rds")
+
+### Drop bathing
+max4th_drop_bathing <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wbtype2 + wlevel + survey + type + depth + temp + ph +
+        swimmingplaying + 
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max4th_drop_bathing, "../Data/ModelOutputs/InfectionPrevalence/max4th_drop_bathing.rds")
+```
+
+
+
+### Model Comparison: Pareto smoothed importance-sampling leave-one-out cross-validation (PSIS-LOO) 
+```{r PSISLOO-4th, message=FALSE, warning=FALSE, cache=TRUE, eval=FALSE}
+require("brms")
+library("loo")
+# Read objects
+max3rd_drop_cond <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max3rd_drop_cond.rds")
+max4th_drop_wbtype2 <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max4th_drop_wbtype2.rds")
+max4th_drop_wlevel <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max4th_drop_wlevel.rds")
+max4th_drop_type <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max4th_drop_type.rds")
+max4th_drop_depth <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max4th_drop_depth.rds")
+max4th_drop_temp <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max4th_drop_temp.rds")
+max4th_drop_ph <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max4th_drop_ph.rds")
+max4th_drop_swimmingplaying <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max4th_drop_swimmingplaying.rds")
+max4th_drop_bathing <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max4th_drop_bathing.rds")
+# compute PSIS-LOO values with the loo function
+loo_max3rd_drop_cond <- loo(max3rd_drop_cond, save_psis = TRUE)
+loo_max4th_drop_wbtype2 <- loo(max4th_drop_wbtype2, save_psis = TRUE)
+loo_max4th_drop_wlevel <- loo(max4th_drop_wlevel, save_psis = TRUE)
+loo_max4th_drop_type <- loo(max4th_drop_type, save_psis = TRUE)
+loo_max4th_drop_depth <- loo(max4th_drop_depth, save_psis = TRUE)
+loo_max4th_drop_temp <- loo(max4th_drop_temp, save_psis = TRUE)
+loo_max4th_drop_ph <- loo(max4th_drop_ph, save_psis = TRUE)
+loo_max4th_drop_swimmingplaying <- loo(max4th_drop_swimmingplaying, save_psis = TRUE)
+loo_max4th_drop_bathing <- loo(max4th_drop_bathing, save_psis = TRUE)
+# Compare PSIS-LOO values
+loo_compare(loo_max3rd_drop_cond, loo_max4th_drop_wbtype2, 
+            loo_max4th_drop_wlevel, loo_max4th_drop_type, 
+            loo_max4th_drop_depth,  loo_max4th_drop_temp,
+            loo_max4th_drop_ph, loo_max4th_drop_swimmingplaying, 
+            loo_max4th_drop_bathing)
+```
+                            elpd_diff se_diff
+max4th_drop_bathing          0.0       0.0   
+max4th_drop_type            -0.2       0.7   
+max3rd_drop_cond            -0.5       0.7   
+max4th_drop_wbtype2         -0.6       1.0   
+max4th_drop_swimmingplaying -1.1       1.1   
+max4th_drop_ph              -1.4       2.1   
+max4th_drop_temp            -6.6       3.9   
+max4th_drop_wlevel          -7.8       5.5   
+max4th_drop_depth           -9.7       5.2  
+
+We're dropping bathing
+
+## Maximal-minimal round 5
+
+### Inspect maximal model
+Lets have a look before dropping further variables
+
+```{r Sh_all-drop5-max, message=FALSE, warning=FALSE, cache=TRUE}
+require("brms")
+
+max4th_drop_bathing <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max4th_drop_bathing.rds")
+
+# Quick look at the summary
+summary(max4th_drop_bathing)
+
+# Plot the effect
+plot(max4th_drop_bathing)
+```
+
+
+### Fit leave-one-out models
+```{r Sh_all-drop5, message=FALSE, warning=FALSE, cache=TRUE, eval=FALSE}
+require("brms")
+
+### Drop wbtype2
+max5th_drop_wbtype2 <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wlevel + survey + type + depth + temp + ph + 
+        swimmingplaying +
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max5th_drop_wbtype2, "../Data/ModelOutputs/InfectionPrevalence/max5th_drop_wbtype2.rds")
+
+### Drop wlevel
+max5th_drop_wlevel <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wbtype2 + type + survey + depth + temp + ph + 
+        swimmingplaying + 
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max5th_drop_wlevel, "../Data/ModelOutputs/InfectionPrevalence/max5th_drop_wlevel.rds")
+
+### Drop type
+max5th_drop_type <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wbtype2 + wlevel + survey + depth + temp + ph + 
+        swimmingplaying + 
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max5th_drop_type, "../Data/ModelOutputs/InfectionPrevalence/max5th_drop_type.rds")
+
+### Drop depth
+max5th_drop_depth <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wbtype2 + wlevel + survey + type + temp + ph + 
+        swimmingplaying + 
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max5th_drop_depth, "../Data/ModelOutputs/InfectionPrevalence/max5th_drop_depth.rds")
+
+### Drop temp
+max5th_drop_temp <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wbtype2 + wlevel + survey + type + depth + ph + 
+        swimmingplaying + 
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max5th_drop_temp, "../Data/ModelOutputs/InfectionPrevalence/max5th_drop_temp.rds")
+
+### Drop ph
+max5th_drop_ph <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wbtype2 + wlevel + survey + type + depth + temp + 
+        swimmingplaying + 
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max5th_drop_ph, "../Data/ModelOutputs/InfectionPrevalence/max5th_drop_ph.rds")
+
+### Drop swimmingplaying
+max5th_drop_swimmingplaying <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        wbtype2 + wlevel + survey + type + depth + temp + ph +
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max5th_drop_swimmingplaying, "../Data/ModelOutputs/InfectionPrevalence/max5th_drop_swimmingplaying.rds")
+```
+
+
+### Model Comparison: Pareto smoothed importance-sampling leave-one-out cross-validation (PSIS-LOO) 
+```{r PSISLOO-5th, message=FALSE, warning=FALSE, cache=TRUE, eval=FALSE}
+require("brms")
+library("loo")
+# Read objects
+max4th_drop_bathing <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max4th_drop_bathing.rds")
+max5th_drop_wbtype2 <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max5th_drop_wbtype2.rds")
+max5th_drop_wlevel <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max5th_drop_wlevel.rds")
+max5th_drop_type <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max5th_drop_type.rds")
+max5th_drop_depth <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max5th_drop_depth.rds")
+max5th_drop_temp <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max5th_drop_temp.rds")
+max5th_drop_ph <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max5th_drop_ph.rds")
+max5th_drop_swimmingplaying <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max5th_drop_swimmingplaying.rds")
+# compute PSIS-LOO values with the loo function
+loo_max4th_drop_bathing <- loo(max4th_drop_bathing, save_psis = TRUE)
+loo_max5th_drop_wbtype2 <- loo(max5th_drop_wbtype2, save_psis = TRUE)
+loo_max5th_drop_wlevel <- loo(max5th_drop_wlevel, save_psis = TRUE)
+loo_max5th_drop_type <- loo(max5th_drop_type, save_psis = TRUE)
+loo_max5th_drop_depth <- loo(max5th_drop_depth, save_psis = TRUE)
+loo_max5th_drop_temp <- loo(max5th_drop_temp, save_psis = TRUE)
+loo_max5th_drop_ph <- loo(max5th_drop_ph, save_psis = TRUE)
+loo_max5th_drop_swimmingplaying <- loo(max5th_drop_swimmingplaying, save_psis = TRUE)
+
+# Compare PSIS-LOO values
+loo_compare(loo_max4th_drop_bathing, loo_max5th_drop_wbtype2, 
+            loo_max5th_drop_wlevel, loo_max5th_drop_type, 
+            loo_max5th_drop_depth,  loo_max5th_drop_temp,
+            loo_max5th_drop_ph, loo_max5th_drop_swimmingplaying)
+```
+
+
+
 
 
 

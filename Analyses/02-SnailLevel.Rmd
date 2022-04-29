@@ -2076,7 +2076,7 @@ max8th_drop_ph_v2 <-
       inits  = 0, seed = 666,
       control = list(adapt_delta = 0.99)) 
 # Save object
-saveRDS(max8th_drop_ph_v3, "../Data/ModelOutputs/InfectionPrevalence/max8th_drop_ph_v2.rds")
+saveRDS(max8th_drop_ph_v2, "../Data/ModelOutputs/InfectionPrevalence/max8th_drop_ph_v2.rds")
 ```
 Yay, no divergent transitions! 
 
@@ -2105,8 +2105,7 @@ max9th_drop_depth <-
         wlevel + survey + temp + 
         (1|shehia/site), 
       warmup = 5000, iter = 15000, chains = 3, 
-      thin = 3, 
-      inits  = 0, seed = 666,
+      thin = 3, inits  = 0, seed = 666,
       control = list(adapt_delta = 0.9999)) # because 0.99 gave 1 divergent transition after warmup
 # Save object
 saveRDS(max9th_drop_depth, "../Data/ModelOutputs/InfectionPrevalence/max9th_drop_depth.rds")
@@ -2119,8 +2118,7 @@ max9th_drop_depth_random_survey <-
         wlevel + temp + 
         (1|survey) + (1|shehia/site), 
       warmup = 5000, iter = 15000, chains = 3, 
-      thin = 3, 
-      inits  = 0, seed = 666,
+      thin = 3, inits  = 0, seed = 666,
       control = list(adapt_delta = 0.9999)) # because 0.99 gave 1 divergent transition after warmup
 # Save object
 saveRDS(max9th_drop_depth_random_survey, "../Data/ModelOutputs/InfectionPrevalence/max9th_drop_depth_random_survey.rds")
@@ -2133,8 +2131,7 @@ max9th_drop_temp <-
         wlevel + survey + depth + 
         (1|shehia/site), 
       warmup = 5000, iter = 15000, chains = 3, 
-      thin = 3, 
-      inits  = 0, seed = 666,
+      thin = 3, inits  = 0, seed = 666,
       control = list(adapt_delta = 0.9999))# because 0.99 gave 2 divergent transitions after warmup
 # Save object
 saveRDS(max9th_drop_temp, "../Data/ModelOutputs/InfectionPrevalence/max9th_drop_temp.rds")
@@ -2148,15 +2145,64 @@ max9th_drop_temp_random_survey <-
         wlevel + depth + 
         (1|survey) + (1|shehia/site), 
       warmup = 5000, iter = 15000, chains = 3, 
-      thin = 3, 
-      inits  = 0, seed = 666,
+      thin = 3, inits  = 0, seed = 666,
       control = list(adapt_delta = 0.9999)) 
 # Save object
 saveRDS(max9th_drop_temp_random_survey, "../Data/ModelOutputs/InfectionPrevalence/max9th_drop_temp_random_survey.rds")
+
+### Drop wlevel
+max9th_drop_wlevel <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        survey + depth + temp + 
+        (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, 
+      thin = 3, inits  = 0, seed = 666,
+      control = list(adapt_delta = 0.9999)) # because 0.99 gave 1 divergent transition after warmup
+# Save object
+saveRDS(max9th_drop_wlevel, "../Data/ModelOutputs/InfectionPrevalence/max9th_drop_wlevel.rds")
+
+### Drop wlevel & make survey random
+max9th_drop_wlevel_random_survey <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ 
+        depth + temp + 
+        (1|survey) + (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, 
+      thin = 3, inits  = 0, seed = 666,
+      control = list(adapt_delta = 0.9999)) 
+# Save object
+saveRDS(max9th_drop_wlevel_random_survey, "../Data/ModelOutputs/InfectionPrevalence/max9th_drop_wlevel_random_survey.rds")
 ```
 
 
-
+### leave-one-out cross-validation (PSIS-LOO) 
+```{r PSISLOO-9th, message=FALSE, warning=FALSE, cache=TRUE, eval=FALSE}
+require("brms")
+library("loo")
+# Read objects
+max8th_drop_ph_v2 <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max8th_drop_ph_v2.rds")
+max9th_drop_depth <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max9th_drop_depth.rds")
+max9th_drop_depth_random_survey <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max9th_drop_depth_random_survey.rds")
+max9th_drop_temp <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max9th_drop_temp.rds")
+max9th_drop_temp_random_survey <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max9th_drop_temp_random_survey.rds")
+max9th_drop_wlevel <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max9th_drop_wlevel.rds")
+max9th_drop_wlevel_random_survey <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max9th_drop_wlevel_random_survey.rds")
+# compute PSIS-LOO values with the loo function
+loo_max8th_drop_ph_v2 <- loo(max8th_drop_ph_v2, save_psis = TRUE)
+loo_max9th_drop_depth <- loo(max9th_drop_depth, save_psis = TRUE)
+loo_max9th_drop_depth_random_survey <- loo(max9th_drop_depth_random_survey, save_psis = TRUE)
+loo_max9th_drop_temp <- loo(max9th_drop_temp, save_psis = TRUE)
+loo_max9th_drop_temp_random_survey <- loo(max9th_drop_temp_random_survey, save_psis = TRUE)
+loo_max9th_drop_wlevel <- loo(max9th_drop_wlevel, save_psis = TRUE)
+loo_max9th_drop_wlevel_random_survey <- loo(max9th_drop_wlevel_random_survey, save_psis = TRUE)
+# Compare PSIS-LOO values
+loo_compare(loo_max8th_drop_ph_v2, 
+            loo_max9th_drop_depth, loo_max9th_drop_temp, loo_max9th_drop_wlevel,
+            loo_max9th_drop_depth_random_survey, loo_max9th_drop_temp_random_survey, loo_max9th_drop_wlevel_random_survey)
+```
 
 
 ## OLD SCRIPT BELOW - IGNORE

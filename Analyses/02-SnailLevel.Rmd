@@ -2147,8 +2147,6 @@ max9th_drop_depth_random_survey <-
 # Save object
 saveRDS(max9th_drop_depth_random_survey, "../Data/ModelOutputs/InfectionPrevalence/max9th_drop_depth_random_survey.rds")
 
-##############################################################
-
 ### Drop temperature
 max9th_drop_temp <-
   brm(data = snailDF.na, 
@@ -2159,9 +2157,10 @@ max9th_drop_temp <-
       warmup = 5000, iter = 15000, chains = 3, 
       thin = 3, 
       inits  = 0, seed = 666,
-      control = list(adapt_delta = 0.99)) 
+      control = list(adapt_delta = 0.9999))# because 0.99 gave 2 divergent transitions after warmup
 # Save object
 saveRDS(max9th_drop_temp, "../Data/ModelOutputs/InfectionPrevalence/max9th_drop_temp.rds")
+
 
 ### Drop temperature & make survey random
 max9th_drop_temp_random_survey <-
@@ -2173,7 +2172,7 @@ max9th_drop_temp_random_survey <-
       warmup = 5000, iter = 15000, chains = 3, 
       thin = 3, 
       inits  = 0, seed = 666,
-      control = list(adapt_delta = 0.99)) 
+      control = list(adapt_delta = 0.9999)) 
 # Save object
 saveRDS(max9th_drop_temp_random_survey, "../Data/ModelOutputs/InfectionPrevalence/max9th_drop_temp_random_survey.rds")
 ```
@@ -2181,21 +2180,7 @@ saveRDS(max9th_drop_temp_random_survey, "../Data/ModelOutputs/InfectionPrevalenc
 
 
 
-```{r Sh_all-drop9-max-v4, message=FALSE, warning=FALSE, cache=TRUE}
-### Drop depth
-max9th_drop_depth <-
-  brm(data = snailDF.na, 
-      family = bernoulli(link = logit),
-      formula = Sh_all ~ 
-        wlevel + survey + temp + 
-        (1|shehia/site), 
-      warmup = 5000, iter = 15000, chains = 3, 
-      thin = 3, 
-      inits  = 0, seed = 666,
-      control = list(adapt_delta = 0.95)) 
-# Save object
-saveRDS(max9th_drop_depth, "../Data/ModelOutputs/InfectionPrevalence/max9th_drop_depth.rds")
-```
+
 ## OLD SCRIPT BELOW - IGNORE
 
 ### Final model

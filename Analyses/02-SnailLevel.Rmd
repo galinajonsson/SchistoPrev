@@ -1818,7 +1818,29 @@ max6th_drop_depth           -9.2       5.2
 
 
 
-## Maximal-minimal 7th iteration
+
+## Meeting 29/4/202 TP:GJ 
+
+* Decision taken to NOT drop wbtype2 (so we delete the 8th and 9th iterations) because its potential effect is a hypothesis TP wants to test.  
+* Decision taken to make 'survey' a random variable. The reasoning behind having it as a fixed effect is that the four surveys were taken during the four seasons of one year. However, there is no replicate year (i.e. all surveys were taken during one year so we can't infer anything about the effect of season per se) and although we do expect the level of infection among snails to differ between seasons, we do not belive that it is the season in itself that is the effect but other variables which we already have (e.g. temperature).  
+* Finally, we know that ph and temperature are highly correlated so we will drop the one that has least explanatory power.  
+
+## Maximal-minimal: New logic
+
+### Refit model with 'Survey' as a random factor
+```{r drop_V2, message=FALSE, warning=FALSE, cache=TRUE, eval=FALSE}
+require("brms")
+### survey as random
+max_V2 <-
+  brm(data = snailDF.na, 
+      family = bernoulli(link = logit),
+      formula = Sh_all ~ wbtype2 + wlevel + depth + temp + ph +
+        (1|survey) + (1|shehia/site), 
+      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
+# Save object
+saveRDS(max_V2, "../Data/ModelOutputs/InfectionPrevalence/max_V2.rds")
+```
+
 
 ### Inspect maximal model
 Lets have a look before dropping further variables
@@ -1829,108 +1851,15 @@ require("PerformanceAnalytics")
 require("ggplot2")
 require("ggpubr")
 
-max6th_drop_swimmingplaying <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max6th_drop_swimmingplaying.rds")
+max_V2 <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max_V2.rds")
 
 # Quick look at the summary
-summary(max6th_drop_swimmingplaying)
+summary(max_V2)
 
 # Plot the effect
-plot(max6th_drop_swimmingplaying)
+plot(max_V2)
 ```
 
-
-### Fit leave-one-out models
-```{r Sh_all-drop7, message=FALSE, warning=FALSE, cache=TRUE, eval=FALSE}
-require("brms")
-
-### Drop wbtype2
-max7th_drop_wbtype2 <-
-  brm(data = snailDF.na, 
-      family = bernoulli(link = logit),
-      formula = Sh_all ~ 
-        wlevel + survey + depth + temp + ph + 
-        (1|shehia/site), 
-      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
-# Save object
-saveRDS(max7th_drop_wbtype2, "../Data/ModelOutputs/InfectionPrevalence/max7th_drop_wbtype2.rds")
-
-### Drop wlevel
-max7th_drop_wlevel <-
-  brm(data = snailDF.na, 
-      family = bernoulli(link = logit),
-      formula = Sh_all ~ 
-        wbtype2 + survey + depth + temp + ph + 
-        (1|shehia/site), 
-      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
-# Save object
-saveRDS(max7th_drop_wlevel, "../Data/ModelOutputs/InfectionPrevalence/max7th_drop_wlevel.rds")
-
-### Drop depth
-max7th_drop_depth <-
-  brm(data = snailDF.na, 
-      family = bernoulli(link = logit),
-      formula = Sh_all ~ 
-        wbtype2 + wlevel + survey + temp + ph + 
-        (1|shehia/site), 
-      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
-# Save object
-saveRDS(max7th_drop_depth, "../Data/ModelOutputs/InfectionPrevalence/max7th_drop_depth.rds")
-
-### Drop temp
-max7th_drop_temp <-
-  brm(data = snailDF.na, 
-      family = bernoulli(link = logit),
-      formula = Sh_all ~ 
-        wbtype2 + wlevel + survey + depth + ph + 
-        (1|shehia/site), 
-      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
-# Save object
-saveRDS(max7th_drop_temp, "../Data/ModelOutputs/InfectionPrevalence/max7th_drop_temp.rds")
-
-### Drop ph
-max7th_drop_ph <-
-  brm(data = snailDF.na, 
-      family = bernoulli(link = logit),
-      formula = Sh_all ~ 
-        wbtype2 + wlevel + survey + depth + temp + 
-        (1|shehia/site), 
-      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
-# Save object
-saveRDS(max7th_drop_ph, "../Data/ModelOutputs/InfectionPrevalence/max7th_drop_ph.rds")
-```
-
-
-
-### leave-one-out cross-validation (PSIS-LOO) 
-```{r PSISLOO-7th, message=FALSE, warning=FALSE, cache=TRUE, eval=FALSE}
-require("brms")
-library("loo")
-# Read objects
-max6th_drop_swimmingplaying <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max6th_drop_swimmingplaying.rds")
-max7th_drop_wbtype2 <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max7th_drop_wbtype2.rds")
-max7th_drop_wlevel <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max7th_drop_wlevel.rds")
-max7th_drop_depth <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max7th_drop_depth.rds")
-max7th_drop_temp <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max7th_drop_temp.rds")
-max7th_drop_ph <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max7th_drop_ph.rds")
-# compute PSIS-LOO values with the loo function
-loo_max6th_drop_swimmingplaying <- loo(max6th_drop_swimmingplaying, save_psis = TRUE)
-loo_max7th_drop_wbtype2 <- loo(max7th_drop_wbtype2, save_psis = TRUE)
-loo_max7th_drop_wlevel <- loo(max7th_drop_wlevel, save_psis = TRUE)
-loo_max7th_drop_depth <- loo(max7th_drop_depth, save_psis = TRUE)
-loo_max7th_drop_temp <- loo(max7th_drop_temp, save_psis = TRUE)
-loo_max7th_drop_ph <- loo(max7th_drop_ph, save_psis = TRUE)
-# Compare PSIS-LOO values
-loo_compare(loo_max6th_drop_swimmingplaying, loo_max7th_drop_wbtype2, 
-            loo_max7th_drop_wlevel, loo_max7th_drop_depth,  
-            loo_max7th_drop_temp, loo_max7th_drop_ph)
-```
-                            elpd_diff se_diff
-max7th_drop_wbtype2          0.0       0.0   
-max6th_drop_swimmingplaying -0.1       0.4   
-max7th_drop_ph              -0.7       1.6   
-max7th_drop_temp            -5.9       3.6   
-max7th_drop_wlevel          -8.2       5.4   
-max7th_drop_depth           -9.2       5.1   
 
 
 

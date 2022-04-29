@@ -1902,7 +1902,7 @@ saveRDS(max7th_drop_ph, "../Data/ModelOutputs/InfectionPrevalence/max7th_drop_ph
 
 
 ### leave-one-out cross-validation (PSIS-LOO) 
-```{r PSISLOO-6th, message=FALSE, warning=FALSE, cache=TRUE, eval=FALSE}
+```{r PSISLOO-7th, message=FALSE, warning=FALSE, cache=TRUE, eval=FALSE}
 require("brms")
 library("loo")
 # Read objects
@@ -2055,40 +2055,17 @@ summary(max8th_drop_ph)
 plot(max8th_drop_ph)
 ```
 
-
-### Sort issue: divergent transitions after warmup
-
 This model output produces a warning reg. divergent transitions:
 
 1: Warning message:
 There were 160 divergent transitions after warmup. Increasing adapt_delta above 0.95 may help. See http://mc-stan.org/misc/warnings.html#divergent-transitions-after-warmup 
 
-We have some divergent transitions (160 to be precise) so let's thin by 3 and set adapt_delta to 0.95.
+We have some divergent transitions (160 to be precise) and therefore thin by 3 and increase adapt_delta to 0.99 (max is 1; tried 0.95, which gave 8 divergent transitions instead of 160).
 
 
-
-```{r Sh_all-drop9-max-v2, message=FALSE, warning=FALSE, cache=TRUE}
+```{r Sh_all-drop9-max-v2, message=FALSE, warning=FALSE, eval=FALSE, cache=TRUE}
 ### Drop ph
 max8th_drop_ph_v2 <-
-  brm(data = snailDF.na, 
-      family = bernoulli(link = logit),
-      formula = Sh_all ~ 
-        wlevel + survey + depth + temp + 
-        (1|shehia/site), 
-      warmup = 5000, iter = 15000, chains = 3, 
-      thin = 3, # Thin chain by 3
-      inits  = 0, seed = 666,
-      control = list(adapt_delta = 0.95)) # Set adapt_delta to 0.95
-# Save object
-saveRDS(max8th_drop_ph_v2, "../Data/ModelOutputs/InfectionPrevalence/max8th_drop_ph_v2.rds")
-```
-
-
-We still have divergent transitions but only 8 instead of 160 so increasing adapt_delta definitely helped. Let's rerun the model, further reducing adapt_delta to 0.99 (max is 1)  and keep thinning = 3.
-
-```{r Sh_all-drop9-max-v3, message=FALSE, warning=FALSE, cache=TRUE}
-### Drop ph
-max8th_drop_ph_v3 <-
   brm(data = snailDF.na, 
       family = bernoulli(link = logit),
       formula = Sh_all ~ 
@@ -2099,7 +2076,7 @@ max8th_drop_ph_v3 <-
       inits  = 0, seed = 666,
       control = list(adapt_delta = 0.99)) 
 # Save object
-saveRDS(max8th_drop_ph_v3, "../Data/ModelOutputs/InfectionPrevalence/max8th_drop_ph_v3.rds")
+saveRDS(max8th_drop_ph_v3, "../Data/ModelOutputs/InfectionPrevalence/max8th_drop_ph_v2.rds")
 ```
 Yay, no divergent transitions! 
 
@@ -2112,13 +2089,14 @@ Yay, no divergent transitions!
 * **depth** -> water depth in three categories; highly correlated with temp   
 
 
-I'm fitting a few new models here cos I dunno what Tom wants/makes ecological sense bu here are the changes I'll make and how I'm thinking:
-1. Drop depth as explanatory variable because temperature and depth are highly correlated.   
-2. Drop temperature as explanatory variable because temperature and depth are highly correlated.  
-3. Drop depth as explanatory variable *AND* make survey random factor because we are not only interested in these particular surveys?   
-4. Drop temperature as explanatory variable *AND* make survey random factor because we are not only interested in these particular surveys?   
+*I'm fitting a few new models here cos I dunno what Tom wants/makes ecological sense bu here are the changes I'll make and how I'm thinking:*
 
-```{r Sh_all-drop9-max-v4, message=FALSE, warning=FALSE, cache=TRUE}
+* Drop depth as explanatory variable because temperature and depth are highly correlated.   
+* Drop temperature as explanatory variable because temperature and depth are highly correlated.  
+* Drop depth as explanatory variable *AND* make survey random factor because we are not only interested in these particular surveys?   
+* Drop temperature as explanatory variable *AND* make survey random factor because we are not only interested in these particular surveys?   
+
+```{r Sh_all-drop9-max-v4, message=FALSE, eval=FALSE, warning=FALSE, cache=TRUE}
 ### Drop depth
 max9th_drop_depth <-
   brm(data = snailDF.na, 

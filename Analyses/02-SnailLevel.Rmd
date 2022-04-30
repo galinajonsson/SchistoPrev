@@ -9,19 +9,21 @@ output:
     toc_float: true
 ---
 
-## Tidy and format raw data
+# Introduction
 
-Load and tidy the data. These analyses are based on the data sets, each of which contains data on different levels: snail-level, survey-level and Shehia-level. We therefore start by loading each one in turn and assigning all variables within a data set the correct class.
+<br/>
+<br/>
 
-### Raw data
+## Tidy and standardise raw data
+
+Load and tidy the data. These analyses are based on the data sets, each of which contains data on different levels: snail-level, survey-level and Shehia-level. We therefore start by reading each in turn, assigning all variables within a data set the correct class.
+
 ```{r load-data, cache=TRUE, warning=FALSE, message=FALSE}
 #############################################################################
 ####### Snail-level data set - test result for infection per snail ##########
 #############################################################################
-
 # Load data set
 snailRaw <- read.csv("../Data/rawData/snail_xeno_raw.csv")
-
 ## Assign variables appropriate classes
 snailRaw$`snail_id`<-as.factor(snailRaw$`snail_id`)
 snailRaw$`site`<-as.factor(snailRaw$`site`)
@@ -52,16 +54,11 @@ snailRaw$patent_Sb<-as.factor(snailRaw$patent_Sb)
 snailRaw$patent_Schisto<-as.factor(snailRaw$patent_Schisto)
 
 
-
-
-
 #############################################################################
 #### Survey-level data set - environmental variables + human activities #####
 #############################################################################
-
-# Load data set
+## Load data set
 surveyRaw <- read.csv("../Data/rawData/survey_site_raw.csv")
-
 ## Assign variables appropriate classes
 surveyRaw$`site`<-as.factor(surveyRaw$`USI`)
 surveyRaw$`survey`<-as.factor(surveyRaw$`survey`)
@@ -119,45 +116,29 @@ surveyRaw$donkey<-as.factor(surveyRaw$donkey)
 surveyRaw$ungulate<-as.factor(surveyRaw$ungulate)
 
 
-
-
 #############################################################################
 ###### Shehia-level data set - infection rates among school children ########
 #############################################################################
-
-# Load data set
+### Load data set
 shehiaRaw <- read.csv("../Data/rawData/shehia_school_raw.csv")
-
 ## Assign variables appropriate classes
 shehiaRaw$`shehia`<-as.factor(shehiaRaw$`shehia`)
 shehiaRaw$`type`<-as.factor(shehiaRaw$`type`)
 shehiaRaw$`zest_arm`<-as.factor(shehiaRaw$`zest_arm`)
-
 ```
+<br/>
 
-
-### Tidy raw data
 Now we merge the data sets to get one data set where each individual *Bulinus* individual (snailRaw) also has information on environmental variables from where it was collected (surveyRaw) and infection rates among school children in the Shehia from where it was collected (shehiaRaw). Finally, we tidy the resulting data set. 
 ```{r MergeTidy-data, cache=TRUE, warning=FALSE, message=FALSE}
-
-
 ### Merge snailRaw and surveyRaw based on "survey_site" and keep all observations in snailRaw
 snailDFtemp1 <- merge(snailRaw, surveyRaw, by.x="survey_site", by.y="survey_site", all.x=TRUE)
-
 # Double check we haven't lost/duplicated any observations
-nrow(snailRaw) == nrow(snailDFtemp1) 
-
-
+#nrow(snailRaw) == nrow(snailDFtemp1) 
 
 ### Merge snailDFtemp1 and shehiaRaw based on shehia and keep all observations in snailRaw/snailDFtemp1
 snailDFtemp2 <-merge(snailDFtemp1, shehiaRaw, by.x="shehia.x", by.y="shehia", all.x=TRUE)
-
 # Double check we haven't lost/duplicated any observations
-nrow(snailRaw) == nrow(snailDFtemp2) 
-
-
-
-
+#nrow(snailRaw) == nrow(snailDFtemp2) 
 
 ### Subset columns of interest and create a new data frame with only these columns
 snailDF <- snailDFtemp2[c("shehia.x", "survey_site", "snail_id", 
@@ -171,10 +152,6 @@ snailDF <- snailDFtemp2[c("shehia.x", "survey_site", "snail_id",
                         "clothes", "dishes", "collectingwater",
                         "Ricecult", "otherfarming")]
 
-
-
-
-
 ### Rename certain variables for convenience
 require(dplyr)
 snailDF <- snailDF %>% 
@@ -187,8 +164,6 @@ snailDF <- snailDF %>%
     wbtype = wbtype.x,
     wbtype2 = wbtype2.x
     )
-
-
 # As we will use "site" nested in "shehia" as random variables, we will remove any sites with six or fewer snails. See the number of snails in each site commented next to the site name below
 temp <- nrow(snailDF)
 snailDF <- filter(snailDF, site != "Mat7") # 3
@@ -197,14 +172,8 @@ snailDF <- filter(snailDF, site != "Wam7") # 3
 snailDF <- filter(snailDF, site != "Ole13") # 6
 snailDF <- filter(snailDF, site != "Waw5") # 5
 snailDF <- filter(snailDF, site != "Uku10") # 6
-
 # How many observations were removed?
-temp - nrow(snailDF)
-
-
-# Look at the structure and assign appropriate classes to all variables
-str(snailDF)
-
+#temp - nrow(snailDF) # 26
 
 ### Create ordered variables for ordered factor variables
 snailDF$type <- factor(snailDF$type, ordered = TRUE, 
@@ -218,8 +187,6 @@ snailDF$flow <- factor(snailDF$flow, ordered = TRUE,
 snailDF$depth <- factor(snailDF$depth, ordered = TRUE, 
                                 levels = c("1", "2", "3"))
 
-
-
 ### Change binary variables to integers
 snailDF$Bfor_pres <- as.integer(as.character(snailDF$Bfor_pres))
 snailDF$other_snail <- as.integer(as.character(snailDF$other_snail))
@@ -231,54 +198,66 @@ snailDF$collectingwater <- as.integer(as.character(snailDF$collectingwater))
 snailDF$Ricecult <- as.integer(as.character(snailDF$Ricecult))
 snailDF$otherfarming <- as.integer(as.character(snailDF$otherfarming))
 
-
-### Also create a data frame where all observations have data for all above variables
+### Create a data frame where all observations have data for all above variables
 snailDF.na <- na.omit(snailDF)
-
 # How many observations were removed?
-nrow(snailDF) - nrow(snailDF.na)
-
-# Drop levels from both tidied data sets
+#nrow(snailDF) - nrow(snailDF.na) # 1335
+# Drop unused levels from both tidied data sets
 snailDF <- droplevels(snailDF)
 snailDF.na <- droplevels(snailDF.na)
 ```
+<br/>
+<br/>
 
+## Variables
 
+<br/>
 
-### Inspect response variable
+Here, we inspect our response variable and explanatory variables of potential interetst to inform our model formulation.  
+
+<br/>
+<br/>
+
+### Response variable
 The response variable used in these analyses is "Sh_all", which denotes whether each snail was infected (1) or (0). 
 
-As we will be preforming our model selection using the snailDF.na data set, we inspect its variables. 
-```{r respvar, cache=TRUE, message=FALSE}
+
+<br/>
+<br/>
+```{r respvar, cache=TRUE, message=FALSE, echo=FALSE}
 require(ggplot2)
 require(dplyr)
 
 ### How many are infected (1) and not (0)? 
+# Plot distribution of response variable
 snailDF.na %>% 
-  mutate(y = Sh_all %>% as.character()) %>% 
+  mutate(y = Sh_all %>% as.factor()) %>% 
   ggplot(aes(x = Sh_all)) +
-  geom_bar() +
-  theme(panel.grid = element_blank())
-
-
-table(snailDF.na$Sh_all)
+  geom_bar(stat = "count") +
+  stat_count(geom = "text", colour = "white", size = 3.5,
+             aes(label = ..count..),position=position_stack(vjust=0.5)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 4000)) +
+  theme(panel.grid = element_blank()) +
+  labs(x = "Infection Status",
+       y = "Individual Count",
+       title ="Figure 1: Infection status among analysed Bolinus sp. individuals",
+       subtitle = "Where 1 and 0 denote infected an uninfected, respectively") +
+  theme(panel.background = element_rect(fill = "white", colour = "black")) +
+  theme(text = element_text(size = 12))  
 ```
+<br/>
 
 96%, i.e. the majority, of tested individuals were not infected (3963), whilst 4% were (153). 
 
+<br/>
+<br/>
 
-### Test for collinearity between explanatory variables
-\n
-\n
-#### USE THIS METHOD (Added **December 2020**)
-* https://stats.stackexchange.com/questions/45444/how-do-you-visualize-binary-outcomes-versus-a-continuous-predictor (Added **December 2020**)   
+### Potential explanatory variables
 
+<br/>
 
-\n
-\n
+##### Explanatory variables of potential interest
 
-#### Explanatory variables of potential interest
-**TOM** can you modify these explanations so that they are correct please? 
 * **wlevel** -> water level (ordered categorical expressed as numeric 1:4, where 1 denotes flooded, 2 = normal, 3 = low, 4= dry)    
 * **wbtype2** -> waterbody type: either permanent (1) or temporary (0)    
 * **syrvey** -> four surveys; corresponds to time of year; potentially correlated with wlevel and wbtype2    
@@ -294,12 +273,9 @@ table(snailDF.na$Sh_all)
 * **bathing** -> water contract will increase likelihood of snail infection, however people may also be less likely to urinate in these areas because people bathing in them? I would suggest we go with INFORMATIVE that it will increase snail infection now though since there is water contact happening and this is key   
 * **othersnail** -> uninformative - presence of other snails may cause 'miracidial sponges' (when schistosomes infect the wrong snail species), however just theory based so we shouldn't use as a prior, but the outcome of model will be interesting.   
 
+<br/>
+**IF POSSIBLE** <span style="color: red;">**Note: these variables will not be included in model fitting**</span> 
 
-
-**IF POSSIBLE** 
-#### Note: these variables will not be included in model fitting
-\n
-\n
 * **Bfor_pres** -> This will be duplicated in the 'othersnail' column since that is a summary stat of any other snail species present, but this species presence may be of particular interest out of the other snail species... This is another closely related Bulinus species Bulinus forskalii that does not transmit schistosomes on Pemba (although does in West Africa) - however its presence in Pemba might confuse the schistosomes if release similar attractants to the other Bulinus species making the miracidia attempt to infect them. This a very loose theory but could be interesting! :)    
 * **clothes** -> uninformative    
 * **dishes** -> uninformative    
@@ -307,11 +283,16 @@ table(snailDF.na$Sh_all)
 * **ricecult** -> uninformative   
 * **otherfarming** -> uninformative   
 
+<br/>
+<br/>
 
+### Test for collinearity between explanatory variables
 
+<br/>
+<br/>
 
-Potential collinearity between quantitative explanatory variables is tested using the Kendall rank coefficient to establish whether variables are statistically dependent. This test is non-parametric, i.e. does not rely on any assumptions on the distributions of the variables. Collinearity between qualitative and quantitative explanatory variables is visually examined using box plots. 
-```{r collinearity-explanVars-test, message=FALSE, warning=FALSE, cache=TRUE}
+Potential collinearity between quantitative explanatory variables is tested using the Kendall rank coefficient to establish whether variables are statistically dependent. This test is non-parametric, i.e. does not rely on any assumptions on the distributions of the variables so there is no need for transformations of the data.  
+```{r collinearity-explanVars-test1, message=FALSE, warning=FALSE, cache=TRUE, echo=FALSE}
 require("PerformanceAnalytics")
 require("ggplot2")
 require("ggpubr")
@@ -321,7 +302,20 @@ require("ggpubr")
 chart.Correlation(snailDF.na[,c("temp", "ph", "cond", "tds", "sal")], 
                   histogram=TRUE, pch=19, method = "kendall")
 # Each significance level is associated to a symbol : p-values(0.001, 0.01, 0.05, 0.1, 1) <=> symbols(“***”, “**”, “*”, “.”, " “)
+```
+<br/>
+<br/>
 
+
+
+<br/>
+<br/>
+
+Potential collinearity between qualitative and quantitative explanatory variables is visually examined using box plots:
+```{r collinearity-explanVars-test2, message=FALSE, warning=FALSE, cache=TRUE}
+require("PerformanceAnalytics")
+require("ggplot2")
+require("ggpubr")
 
 ### Qualitative and quantitative explanatory variables
 
@@ -1819,51 +1813,163 @@ max6th_drop_depth           -9.2       5.2
 
 
 
-## Meeting 29/4/202 TP:GJ 
+
+# Model fitting and selection - 29/4/2022  Update
+<br/>
+<br/>
+
+#### Notes TP-GMJ meeting 29/4/2022 
 
 * Decision taken to NOT drop wbtype2 (so we delete the 8th and 9th iterations) because its potential effect is a hypothesis TP wants to test.  
 * Decision taken to make 'survey' a random variable. The reasoning behind having it as a fixed effect is that the four surveys were taken during the four seasons of one year. However, there is no replicate year (i.e. all surveys were taken during one year so we can't infer anything about the effect of season per se) and although we do expect the level of infection among snails to differ between seasons, we do not belive that it is the season in itself that is the effect but other variables which we already have (e.g. temperature).  
 * Finally, we know that ph and temperature are highly correlated so we will drop the one that has least explanatory power.  
 
-## Maximal-minimal: New logic
+<br/>
+<br/>
 
-### Refit model with 'Survey' as a random factor
+## Model implementation & selection
+
+Given the inherently "low information content" of binary data, we will fit our binomial generalised linear mixed effects model using **Bayesian inference**. We will use the R package **brms**, which implements Bayesian generalized linear mixed models using the probabilistic programming language **Stan**. Please see the [brms github page](https://github.com/paul-buerkner/brms) for software installation guides (available for multiple operation systems). Moreover, "brms" allows model fit to be assessed and compared with the **Watanabe-Akaike-Information Criterion (WAIC)** and **leave-one-out cross-validation (LOO)**. We Will use WAIC LOO for model selection. 
+
+<br/>
+<br/>
+
+### Model Specifications 
+
+<br/>
+
+* **Distribution Family**: Since our data is binary (a snail is either infected or not, scored as 1 or 0, respectively), we have two distribution families to chose from: binomial or Bernoulli. We will use the **Bernoulli distribution** because it deals with data which only has 1 trial (individual snails) & only 2 possible outcomes (infected or not). On the other hand, if we tested the same individual snails multiple times over a given period, we would be dealing with a binomial distribution.         
+* **Link Function**: We will use the less common **complementary log-log (cloglog) link** function (see [here](https://bambinos.github.io/bambi/0.6.0/notebooks/alternative_links_binary.html) for further details). In contrast to the more well-known alternatives (logit and probit), cloglog is much better suited for binary data wherein the one of the outcomes is rare relative to the other, which is the case for us (there are far fewer infected snails than there are uninfected snails; Figure <span style="color: red;">**1**</span>)  
+* We use a relatively standard number of **MCMC chains** (3), each with 15000 **iterations** and a **burn-in** of 5000. Moreover, we **thin** by 3: a reasonable trade-off between information content and manageable model output file size.   
+* Finally, since these models are fitted in STAN (rather than e.g., JAGS or BUGS) with minimally informative priors (see [here](https://www.martinmodrak.cz/2018/02/19/taming-divergences-in-stan-models/) for and excellent crash-course), we avoid divergent transitions by specifying **adapt_delta** to 0.999.   
+
+<br/>
+<br/>
+
+## 1st Iteration
+<br/>
+
+### Fit model w/ 'survey' as random variable
+
 ```{r drop_V2, message=FALSE, warning=FALSE, cache=TRUE, eval=FALSE}
 require("brms")
-### survey as random
-max_V2 <-
-  brm(data = snailDF.na, 
-      family = bernoulli(link = logit),
-      formula = Sh_all ~ wbtype2 + wlevel + depth + temp + ph +
-        (1|survey) + (1|shehia/site), 
-      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
-# Save object
+### Generate model output using new formulation
+max_V2 <-brm(data = snailDF.na, 
+             family = bernoulli(link = cloglog), 
+             formula = Sh_all ~ # Response variable
+               wbtype2 + wlevel + depth + temp + ph + # Fixed effects
+               (1|survey) + (1|shehia/site), # Random effects w/ interaction
+             warmup = 5000, # burn-in period (i.e. iterations to be discarded)
+             iter = 15000, # total number of iterations (inc. burn-in)
+             chains = 3, # number of MCMC chains
+             inits  = 0,  # starting values of the iterations
+             seed = 666, # random seed, allowing for replication of results
+             thin = 3, # thinning for manageable model output file size
+             control = list(adapt_delta = 0.999)) 
+### Check for convergence and divergent transitions before saving output
+max_V2 # No issues
 saveRDS(max_V2, "../Data/ModelOutputs/InfectionPrevalence/max_V2.rds")
 ```
+<br/>
+<br/>
 
+### Inspect maximal model output
 
-### Inspect maximal model
-Lets have a look before dropping further variables
-
-```{r Sh_all-drop7-max, message=FALSE, warning=FALSE, cache=TRUE}
-require("brms")
-require("PerformanceAnalytics")
-require("ggplot2")
-require("ggpubr")
-
+After ensuring that all parameter estimates of the model we just fitted have converged (i.e, Rhat < 1.1; [Gelman & Rubin, 1992](https://www.jstor.org/stable/2246093?seq=1)) and that the 'brms' package doesn't flag any other obvious reasons for concern (e.g., divergent transitions) in the code chunk above, we visually investigate the estimated parameter distributions' chains as well as their posterior distributions.    
+<br/>
+<br/>
+```{r drop_V2-inspect, message=FALSE, warning=FALSE, cache=TRUE, echo=FALSE}
+require("brms"); require("PerformanceAnalytics"); require("ggplot2"); require("ggpubr")
+# Read model output
 max_V2 <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max_V2.rds")
-
-# Quick look at the summary
-summary(max_V2)
-
-# Plot the effect
+# Produce density and trace plots
 plot(max_V2)
 ```
+<br/>
+<br/>
+
+*We do this using leave-one-out cross-validation (LOOCV) but first we must refit the maximal model dropping each explanatory variable in turn.*
+
+<br/>
+<br/>
+
+### Fit leave-one-out models
+
+```{r V2-drop1, message=FALSE, warning=FALSE, cache=TRUE, eval=FALSE}
+require("brms")
+### Fit model dropping temperature
+V2_drop_temp <-brm(data = snailDF.na,family = bernoulli(link = cloglog), 
+              formula = Sh_all ~ wbtype2 + wlevel + depth + ph +
+               (1|survey) + (1|shehia/site), 
+             warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666,
+             thin = 3, control = list(adapt_delta = 0.999)) 
+### Fit model dropping pH
+V2_drop_ph <-brm(data = snailDF.na, family = bernoulli(link = cloglog), 
+                 formula = Sh_all ~ wbtype2 + wlevel + depth + temp + 
+                   (1|survey) + (1|shehia/site),
+                 warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666,
+                 thin = 3, control = list(adapt_delta = 0.999)) 
+### Check for convergence and divergent transitions before saving output
+V2_drop_temp; V2_drop_ph 
+saveRDS(V2_drop_temp, "../Data/ModelOutputs/InfectionPrevalence/V2_drop_temp.rds")
+saveRDS(V2_drop_ph, "../Data/ModelOutputs/InfectionPrevalence/V2_drop_ph.rds")
+```
+<br/>
+<br/>
+
+
+### Model Comparison: Pareto smoothed importance-sampling leave-one-out cross-validation (PSIS-LOO) 
+
+
+We use the loo package to carry out Pareto smoothed importance-sampling leave-one-out cross-validation (PSIS-LOO) for purposes of model checking and model comparison.   
+- Reference: https://link.springer.com/article/10.1007/s11222-016-9696-4  
+- Useful link: https://mc-stan.org/loo/articles/loo2-example.html   
+
+
+
+```{r PSISLOO-V2-1st, message=FALSE, warning=FALSE, cache=TRUE, eval=FALSE}
+require("brms")
+library("loo")
+### Read objects
+max_V2 <- readRDS("../Data/ModelOutputs/InfectionPrevalence/max_V2.rds")
+V2_drop_temp <- readRDS("../Data/ModelOutputs/InfectionPrevalence/V2_drop_temp.rds")
+V2_drop_ph <- readRDS("../Data/ModelOutputs/InfectionPrevalence/V2_drop_ph.rds")
+
+### Compare PSIS-LOO values computed with the loo-function 
+loo_compare(loo(max_V2, save_psis = TRUE),
+            loo(V2_drop_temp, save_psis = TRUE),
+            loo(V2_drop_ph, save_psis = TRUE))
+```
+<br/>
+<br/>
 
 
 
 
-## OLD SCRIPT BELOW - IGNORE
+
+
+
+<br/>
+<br/>
+<br/>
+
+# Results
+
+<br/>
+<br/>
+
+#### Use this method for visualisation:
+
+* https://stats.stackexchange.com/questions/45444/how-do-you-visualize-binary-outcomes-versus-a-continuous-predictor (Added **December 2020**)  
+
+
+
+
+
+
+
+
+# OLD SCRIPT BELOW - IGNORE
 
 ### Final model
 

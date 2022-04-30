@@ -9,7 +9,7 @@ output:
     toc_float: true
 ---
 
-# Introduction
+# 1. Introduction
 
 <br/>
 <br/>
@@ -240,7 +240,7 @@ snailDF.na %>%
   theme(panel.grid = element_blank()) +
   labs(x = "Infection Status",
        y = "Individual Count",
-       title ="Figure 1: Infection status among analysed Bolinus sp. individuals",
+       title ="Figure 1.1: Infection status among analysed Bolinus sp. individuals",
        subtitle = "Where 1 and 0 denote infected an uninfected, respectively") +
   theme(panel.background = element_rect(fill = "white", colour = "black")) +
   theme(text = element_text(size = 12))  
@@ -289,137 +289,99 @@ snailDF.na %>%
 ### Test for collinearity between explanatory variables
 
 <br/>
+
+Potential collinearity between quantitative explanatory variables is tested using the Kendall rank coefficient to establish whether variables are statistically dependent. This test is non-parametric, i.e. does not rely on any assumptions on the distributions of the variables so there is no need for transformations of the data. We display the results in below correlation chart (Figure 2; significance levels are associated to a symbol such that p-values of 0.001, 0.01 and 0.05 are indicated by three, two and one asterisks, respectively).  
+
 <br/>
-
-Potential collinearity between quantitative explanatory variables is tested using the Kendall rank coefficient to establish whether variables are statistically dependent. This test is non-parametric, i.e. does not rely on any assumptions on the distributions of the variables so there is no need for transformations of the data.  
 ```{r collinearity-explanVars-test1, message=FALSE, warning=FALSE, cache=TRUE, echo=FALSE}
-require("PerformanceAnalytics")
-require("ggplot2")
-require("ggpubr")
-
-
+require("PerformanceAnalytics"); require("ggplot2"); require("ggpubr")
 ### Quantitative explanatory variables: Kendall rank coefficient
 chart.Correlation(snailDF.na[,c("temp", "ph", "cond", "tds", "sal")], 
                   histogram=TRUE, pch=19, method = "kendall")
-# Each significance level is associated to a symbol : p-values(0.001, 0.01, 0.05, 0.1, 1) <=> symbols(“***”, “**”, “*”, “.”, " “)
+mtext("Figure 1.2: Correlation chart of contious variables (Kendall rank coefficient)", side=3, line=3) # add legend
 ```
 <br/>
 <br/>
-
+The majority of explanatory quantitative variables are correlated (p<0.001), and therefore not independent. As such, by the end of the model selection process we want a model that **ONLY includes one quantitative variable**, because including two or more independent variables does not meet model assumptions. All correlation coefficients except between pH and total dissolved substances are significantly correlated, and therefore, the only scenario in which we would include two explanatory quantitative variables is those two. Moreover, all correlation coefficients between conductivity, total dissolved substances and salinity are very close to 1 and have p<0.001. Therefore, we will **disregard total dissolved substances and salinity** from hereon and only consider conductivity in model formulations because, among the three, this variable was measured most precisely. 
+<br/>
 
 
 <br/>
-<br/>
-
 Potential collinearity between qualitative and quantitative explanatory variables is visually examined using box plots:
-```{r collinearity-explanVars-test2, message=FALSE, warning=FALSE, cache=TRUE}
-require("PerformanceAnalytics")
-require("ggplot2")
-require("ggpubr")
+<br/>
 
-### Qualitative and quantitative explanatory variables
-
+<br/>
+```{r collinearity-explanVars-test2, message=FALSE, warning=FALSE, cache=TRUE, echo=FALSE}
+require("PerformanceAnalytics"); require("ggplot2"); require("ggpubr")
 ## Qualitative variables and temp
-ggarrange(ggplot(snailDF.na, aes(x = type, y = ph)) + geom_boxplot(),
-          ggplot(snailDF.na, aes(x = wbtype2, y = temp)) + geom_boxplot(),
-          ggplot(snailDF.na, aes(x = survey, y = temp)) + geom_boxplot(),
-          ggplot(snailDF.na, aes(x = wlevel, y = temp)) + geom_boxplot(),
-          ggplot(snailDF.na, aes(x = flow, y = temp)) + geom_boxplot(),
-          ggplot(snailDF.na, aes(x = depth, y = temp)) + geom_boxplot() + rremove("x.text"), 
-          labels = c("type", "wbtype2", "survey", "wlevel", "flow", "depth"),
-          ncol = 3, nrow = 2)
-
-## Qualitative variables and pH
-ggarrange(ggplot(snailDF.na, aes(x = type, y = ph)) + geom_boxplot(),
-          ggplot(snailDF.na, aes(x = wbtype2, y = ph)) + geom_boxplot(),
-          ggplot(snailDF.na, aes(x = survey, y = ph)) + geom_boxplot(),
-          ggplot(snailDF.na, aes(x = wlevel, y = ph)) + geom_boxplot(),
-          ggplot(snailDF.na, aes(x = flow, y = ph)) + geom_boxplot(),
-          ggplot(snailDF.na, aes(x = depth, y = ph)) + geom_boxplot() + rremove("x.text"), 
-          labels = c("type", "wbtype2", "survey", "wlevel", "flow", "depth"),
-          ncol = 3, nrow = 2)
-
-## Qualitative variables and cond
-ggarrange(ggplot(snailDF.na, aes(x = type, y = ph)) + geom_boxplot(),
-          ggplot(snailDF.na, aes(x = wbtype2, y = cond)) + geom_boxplot(),
-          ggplot(snailDF.na, aes(x = survey, y = cond)) + geom_boxplot(),
-          ggplot(snailDF.na, aes(x = wlevel, y = cond)) + geom_boxplot(),
-          ggplot(snailDF.na, aes(x = flow, y = cond)) + geom_boxplot(),
-          ggplot(snailDF.na, aes(x = depth, y = cond)) + geom_boxplot() + rremove("x.text"), 
-          labels = c("type", "wbtype2", "survey", "wlevel", "flow", "depth"),
-          ncol = 3, nrow = 2)
-
+figure1.3 <- ggarrange(ggplot(snailDF.na, aes(x = type, y = temp)) + geom_boxplot() + theme_bw(),
+                       ggplot(snailDF.na, aes(x = wbtype2, y = temp)) + geom_boxplot() + theme_bw(),
+                       ggplot(snailDF.na, aes(x = survey, y = temp)) + geom_boxplot() + theme_bw(),
+                       ggplot(snailDF.na, aes(x = wlevel, y = temp)) + geom_boxplot() + theme_bw(),
+                       ggplot(snailDF.na, aes(x = flow, y = temp)) + geom_boxplot() + theme_bw(),
+                       ggplot(snailDF.na, aes(x = depth, y = temp)) + geom_boxplot() + theme_bw() +
+                         rremove("x.text"), 
+                       #labels = c("type", "wbtype2", "survey", "wlevel", "flow", "depth"),
+                       ncol = 3, nrow = 2)
+annotate_figure(figure1.3,
+               top = text_grob("Figure 1.3: Box plots - Temperature against qualitative variables", 
+                               size = 14))
 ```
+<br/>
+<br/>
+Figure 1.3 (above) indicates that we do not have collinearity between temperature and any of the qualitative variables as evident from overlapping interquartile ranges (boxes) for all variables except survey-value 'S3' and remaining survey-values (top right panel), but note that the whiskers still overlap. Also note that, unsurprisingly, the most evident case of potential collinearity between temperature and a qualitative variables is for depth (bottom right panel); however, the differences are not statistically significant as evident from overlaps. As such, we do not need to worry about potentially combining temperature and any of the qualitative variables in model formulations. 
+<br/>
 
+<br/>
+```{r collinearity-explanVars-test3, message=FALSE, warning=FALSE, cache=TRUE, echo=FALSE}
+require("PerformanceAnalytics"); require("ggplot2"); require("ggpubr")
+## Qualitative variables and ph
+figure1.4 <- ggarrange(ggplot(snailDF.na, aes(x = type, y = ph)) + geom_boxplot() + theme_bw(),
+                       ggplot(snailDF.na, aes(x = wbtype2, y = ph)) + geom_boxplot() + theme_bw(),
+                       ggplot(snailDF.na, aes(x = survey, y = ph)) + geom_boxplot() + theme_bw(),
+                       ggplot(snailDF.na, aes(x = wlevel, y = ph)) + geom_boxplot() + theme_bw(),
+                       ggplot(snailDF.na, aes(x = flow, y = ph)) + geom_boxplot() + theme_bw(),
+                       ggplot(snailDF.na, aes(x = depth, y = ph)) + geom_boxplot() + theme_bw() +
+                         rremove("x.text"), ncol = 3, nrow = 2)
+annotate_figure(figure1.4,
+               top = text_grob("Figure 1.4: Box plots - pH against qualitative variables", 
+                               size = 14))
+```
+<br/>
+<br/>
+Figure 1.4 (above) indicates that we do not have collinearity between pH and any of the qualitative variables as evident from overlapping interquartile ranges (boxes). As with temperature (Figure 1.3) , the most evident case of potential collinearity is for depth (bottom right panel); however, the differences are not statistically significant. As such, we do not need to worry about potentially combining pH and any of the qualitative variables in model formulations. 
+<br/>
 
-\n
-\n
-The majority of explanatory quantitative variables are correlated (p<0.001), and therefore not independent. As such, by the end of the model selection process we want a model that **ONLY includes one quantitative variable**, as including two or more independent variables does not meet model assumptions. Temperature is negatively correlated with pH (p<0.001) and positively correlated with all other variables (p<0.001). All correlation coefficients except between conductivity, total dissolved substances and salinity are less than 0.3, whist conductivity, total dissolved substances and salinity show correlation coefficients close to 1. Only conductivity will be considered from hereon as this variable was measured most precisely. 
-
-\n
-\n
-\n
-Among the qualitative and quantitative explanatory variables, only temperature and depth appear correlated.
-
-
-# Model fitting and selection
-
-## Viariables
-The variables used in initial model selection are as follows: 
-
-### Response variable 
-* **Sh_all** -> , which denotes whether each snail was infected (1) or (0). 
-
-
-### Explanatory variables of potential interest
-**TOM** can you modify these explanations so that they are correct please? 
-* **wlevel** -> water level    
-* **wbtype2** -> waterbody type: either permanent or temporary    
-* **survey** -> four surveys; corresponds to time of year; potentially correlated with wlevel and wbtype2    
-* **temp** -> water temperature   
-* **cond** -> conductivity; indirect measure of water chemistry   
-* **ph** -> potentially correlated with conductivity   
-* **type** -> human response to treatment; whether people got reinfected quickly or not; four categories    
-* **flow** -> water flow; four categories   
-* **depth** -> water depth; three categories; likely correlated with wbtype2   
-* **Swimmingplaying** -> water contract will increase likelihood of snail infection - also this is children swimming and playing and these are the higher risk group for infections based on the disease endemicity (INFORMATIVE PRIOR)   
-* **bathing** -> water contract will increase likelihood of snail infection, however people may also be less likely to urinate in these areas because people bathing in them? I would suggest we go with INFORMATIVE that it will increase snail infection now though since there is water contact happening and this is key   
-* **othersnail** -> uninformative - presence of other snails may cause 'miracidial sponges' (when schistosomes infect the wrong snail species), however just theory based so we shouldn't use as a prior, but the outcome of model will be interesting.   
-
-
-
-**IF POSSIBLE** 
-\n
-\n
-* **Bfor_pres** -> This will be duplicated in the 'othersnail' column since that is a summary stat of any other snail species present, but this species presence may be of particular interest out of the other snail species... This is another closely related Bulinus species Bulinus forskalii that does not transmit schistosomes on Pemba (although does in West Africa) - however its presence in Pemba might confuse the schistosomes if release similar attractants to the other Bulinus species making the miracidia attempt to infect them. This a very loose theory but could be interesting! :)    
-* **clothes** -> uninformative    
-* **dishes** -> uninformative    
-* **collectingwater** -> uninformative   
-* **ricecult** -> uninformative   
-* **otherfarming** -> uninformative   
-
-
-### Random factors   
-* **shehia** -> regions/wards on Pemba
-* **site** -> sites within shesias; hence, site is nested within shehia in models
-
-
-Given the variables described above, we must use a type of generalized linear mixed effects model to test what effects **Sh_all**, i.e. whether snails are infected or not. 
+<br/>
+```{r collinearity-explanVars-test4, message=FALSE, warning=FALSE, cache=TRUE, echo=FALSE}
+require("PerformanceAnalytics"); require("ggplot2"); require("ggpubr")
+## Qualitative variables and cond
+figure1.5 <- ggarrange(ggplot(snailDF.na, aes(x = type, y = cond)) + geom_boxplot() + theme_bw(),
+                       ggplot(snailDF.na, aes(x = wbtype2, y = cond)) + geom_boxplot() + theme_bw(),
+                       ggplot(snailDF.na, aes(x = survey, y = cond)) + geom_boxplot() + theme_bw(),
+                       ggplot(snailDF.na, aes(x = wlevel, y = cond)) + geom_boxplot() + theme_bw(),
+                       ggplot(snailDF.na, aes(x = flow, y = cond)) + geom_boxplot() + theme_bw(),
+                       ggplot(snailDF.na, aes(x = depth, y = cond)) + geom_boxplot() + theme_bw() +
+                         rremove("x.text"), ncol = 3, nrow = 2)
+annotate_figure(figure1.5,
+               top = text_grob("Figure 1.5: Box plots - Conductivity against qualitative variables", 
+                               size = 14))
+```
+<br/>
+<br/>
+Figure 1.5 (above) indicates that we also do not have collinearity between conductivity and the qualitative variables so we do not need to worry about potentially combining conductivity and any of the qualitative variables in model formulations. 
+<br/>
+<br/>
+<br/>
 
 
 
-
-
-### Distribution
-As our data is binary (1 is an individual snail is infected and 0 if not), the choice of distribution (family) is straight forward: we will use a binomial distribution. The link function we will use will depend on the flexibility of model implementation (see below). We will initially try the logit link function; however, given that the logit link function may be inappropriate when the numbers of zeroes and ones are very unequal (as our data is), if possible, we will also try the clog-log and clog-clog links. 
-
-
-## Model implementation - selection
-Given the inherently "low information content" of binary data, we will fit our binomial generalised linear mixed effects model using Bayesian inferences. We will use the R package "brms", which implements Bayesian generalized linear mixed models using the probabilistic programming language Stan. Please see the [brms github page](https://github.com/paul-buerkner/brms) for software installation guides (available for multiple operation systems). Moreover, "brms" allows model fit to be assessed and compared with the Watanabe-Akaike-Information Criterion (WAIC) and leave-one-out cross-validation (LOO).
+# 2. Model fitting and selection
 
 
 ### Prior specifications
 We apply prior distributions to all explanatory variables of potential interest that reflect our actual beliefs and understandings. Our explanatory variables and prior specifications are as follows:
+
 * **wlevel** -> water level    
 * **wbtype2** -> waterbody type: either permanent or temporary    
 * **syrvey** -> four surveys; corresponds to time of year; potentially correlated with wlevel and wbtype2; this variable will not be dropped in any model simplification as it accounts for known differences in between different seasons.  
@@ -445,6 +407,33 @@ We apply prior distributions to all explanatory variables of potential interest 
 * https://bayesat.github.io/lund2018/slides/andrey_anikin_slides.pdf (Added **December 2020**)   
 * https://www.rensvandeschoot.com/tutorials/generalised-linear-models-with-brms/ (Added **December 2020**)   
 
+## Maximal-minimal 1st iteration
+
+### Fit maximal model
+```{r Sh_all-drop1-max-fit-20220430, message=FALSE, warning=FALSE, cache=TRUE, eval=FALSE}
+require("brms")
+### Generate maximal model output using new cloglog-formulation
+#############################################################################
+###########################   NOT GENERATED   ###############################
+#############################################################################
+max1st_V2 <-brm(data = snailDF.na, 
+             family = bernoulli(link = cloglog), 
+             formula = Sh_all ~ # Response variable
+               wbtype2 + wlevel + type + survey + flow + depth + temp + cond + ph + 
+               swimmingplaying + bathing + other_snail + # Fixed effects
+               (1|survey) + (1|shehia/site), # Random effects w/ interaction
+             warmup = 5000, # burn-in period (i.e. iterations to be discarded)
+             iter = 15000, # total number of iterations (inc. burn-in)
+             chains = 3, # number of MCMC chains
+             inits  = 0,  # starting values of the iterations
+             seed = 666, # random seed, allowing for replication of results
+             thin = 3, # thinning for manageable model output file size
+             cores = 2, #  to speed up modelling time
+             control = list(adapt_delta = 0.999)) 
+### Check for convergence and divergent transitions before saving output
+max1st_V2 
+#saveRDS(max1st_V2, "../Data/ModelOutputs/InfectionPrevalence/max1st_V2.rds")
+```
 
 
 
@@ -457,21 +446,21 @@ First, we run a model with uninformative priors fitted to all parameters. Each r
 require("brms")
 
 ### Fit a maximal model with uninformative priors 
-max.noInfo <-
-  brm(data = snailDF.na, 
-      family = bernoulli(link = logit), # specify bernoulli (not binomial) for a binary logistic regression
-      formula = Sh_all ~ # Response variable
-        wbtype2 + wlevel + type + survey + flow + depth +
-            temp + cond + ph + 
-              swimmingplaying + bathing + other_snail +
-              Bfor_pres + clothes + dishes + collectingwater +
-              Ricecult + otherfarming +
-            (1|shehia/site), # Random factor
-      warmup = 5000, # burn-in period (i.e. iterations to be discarded)
-      iter = 15000, # total number of iterations (including burn-in)
-      chains = 3, # number of MCMC 
-      inits  = 0, # inits specifies the starting values of the iterations (normally you can either use the maximum likelihood estimates of the parameters as starting values, or simply ask the algorithm to start with zeros)
-      seed = 666) # specifies the random seed, allowing for replication of results
+#max.noInfo <-
+#  brm(data = snailDF.na, 
+#      family = bernoulli(link = logit), # specify bernoulli (not binomial) for a binary logistic regression
+#      formula = Sh_all ~ # Response variable
+#        wbtype2 + wlevel + type + survey + flow + depth +
+#            temp + cond + ph + 
+#              swimmingplaying + bathing + other_snail +
+#              Bfor_pres + clothes + dishes + collectingwater +
+#              Ricecult + otherfarming +
+#            (1|shehia/site), # Random factor
+#      warmup = 5000, # burn-in period (i.e. iterations to be discarded)
+#      iter = 15000, # total number of iterations (including burn-in)
+#      chains = 3, # number of MCMC 
+#      inits  = 0, # inits specifies the starting values of the iterations (normally you can either use the maximum likelihood estimates of the parameters as starting values, or simply ask the algorithm to start with zeros)
+#      seed = 666) # specifies the random seed, allowing for replication of results
 
 # Save object
 #saveRDS(max.noInfo, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.rds")
@@ -503,233 +492,121 @@ Interestingly, the model does not seem to struggle to converge despite the large
 
 ```{r Sh_all-UNINF-drop1, message=FALSE, warning=FALSE, cache=TRUE, eval=FALSE, echo=FALSE}
 require("brms")
+#############################################################################
+###########################   NOT GENERATED   ###############################
+#############################################################################
 ### Drop wbtype2
-max.noInfo.wbtype2 <-
-  brm(data = snailDF.na, 
-      family = bernoulli(link = logit), # specify bernoulli (not binomial) for a binary logistic regression
-      formula = Sh_all ~ # Response variable
-        wlevel + type + survey + flow + depth +
-            temp + cond + ph + 
-              swimmingplaying + bathing + other_snail +
-              Bfor_pres + clothes + dishes + collectingwater +
-              Ricecult + otherfarming +
-            (1|shehia/site), # Random factor
-      warmup = 5000, # burn-in period (i.e. iterations to be discarded)
-      iter = 15000, # total number of iterations (including burn-in)
-      chains = 3, # number of MCMC 
-      inits  = 0, # inits specifies the starting values of the iterations (normally you can either use the maximum likelihood estimates of the parameters as starting values, or simply ask the algorithm to start with zeros)
-      seed = 666) # specifies the random seed, allowing for replication of results
-# Save object
-saveRDS(max.noInfo.wbtype2, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.wbtype2.rds")
-
+max1_wbtype2_V2 <-brm(data = snailDF.na, family = bernoulli(link = cloglog), 
+                      formula = Sh_all ~ wlevel + type + survey + flow + depth + temp + cond + ph + 
+                        swimmingplaying + bathing + other_snail + (1|survey) + (1|shehia/site), 
+                      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666, 
+                      thin = 3, cores = 2, control = list(adapt_delta = 0.999)) 
+saveRDS(max1_wbtype2_V2, "../Data/ModelOutputs/InfectionPrevalence/max1_wbtype2_V2.rds")
+#############################################################################
+###########################   NOT GENERATED   ###############################
+#############################################################################
 ### Drop wlevel
-max.noInfo.wlevel <-
-  brm(data = snailDF.na, 
-      family = bernoulli(link = logit), 
-      formula = Sh_all ~ 
-        wbtype2 + type + survey + flow + depth + temp + cond + ph + 
-        swimmingplaying + bathing + other_snail + Bfor_pres + 
-        clothes + dishes + collectingwater + Ricecult + otherfarming +
-        (1|shehia/site), 
-      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
-# Save object
-saveRDS(max.noInfo.wlevel, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.wlevel.rds")
-
+max1_wlevel_V2 <-brm(data = snailDF.na, family = bernoulli(link = cloglog), 
+                      formula = Sh_all ~ wbtype2 + type + survey + flow + depth + temp + cond + ph + 
+                        swimmingplaying + bathing + other_snail + (1|survey) + (1|shehia/site), 
+                      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666, 
+                      thin = 3, cores = 2, control = list(adapt_delta = 0.999)) 
+saveRDS(max1_wlevel_V2, "../Data/ModelOutputs/InfectionPrevalence/max1_wlevel_V2.rds")
+#############################################################################
+###########################   NOT GENERATED   ###############################
+#############################################################################
 ### Drop type
-max.noInfo.type <-
-  brm(data = snailDF.na, 
-      family = bernoulli(link = logit), 
-      formula = Sh_all ~ 
-        wlevel + wbtype2 + survey + flow + depth + temp + cond + ph + 
-        swimmingplaying + bathing + other_snail + Bfor_pres + 
-        clothes + dishes + collectingwater + Ricecult + otherfarming +
-        (1|shehia/site), 
-      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
-# Save object
-saveRDS(max.noInfo.type, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.type.rds")
-
+max1_type_V2 <-brm(data = snailDF.na, family = bernoulli(link = cloglog), 
+                      formula = Sh_all ~ wbtype2 + wlevel + survey + flow + depth + temp + cond + ph + 
+                        swimmingplaying + bathing + other_snail + (1|survey) + (1|shehia/site), 
+                      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666, 
+                      thin = 3, cores = 2, control = list(adapt_delta = 0.999)) 
+saveRDS(max1_type_V2, "../Data/ModelOutputs/InfectionPrevalence/max1_type_V2.rds")
+#############################################################################
+###########################   NOT GENERATED   ###############################
+#############################################################################
 ### Drop flow
-max.noInfo.flow <-
-  brm(data = snailDF.na, 
-      family = bernoulli(link = logit), 
-      formula = Sh_all ~ 
-        wlevel + wbtype2 + survey + type + depth + temp + cond + ph + 
-        swimmingplaying + bathing + other_snail + Bfor_pres + 
-        clothes + dishes + collectingwater + Ricecult + otherfarming +
-        (1|shehia/site), 
-      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666) 
-# Save object
-saveRDS(max.noInfo.flow, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.flow.rds")
-
+max1_flow_V2 <-brm(data = snailDF.na, family = bernoulli(link = cloglog), 
+                      formula = Sh_all ~ wbtype2 + wlevel + survey + type + depth + temp + cond + ph + 
+                        swimmingplaying + bathing + other_snail + (1|survey) + (1|shehia/site), 
+                      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666, 
+                      thin = 3, cores = 2, control = list(adapt_delta = 0.999)) 
+saveRDS(max1_flow_V2, "../Data/ModelOutputs/InfectionPrevalence/max1_flow_V2.rds")
+#############################################################################
+###########################   NOT GENERATED   ###############################
+#############################################################################
 ### Drop depth
-max.noInfo.depth <-
-  brm(data = snailDF.na, 
-      family = bernoulli(link = logit), 
-      formula = Sh_all ~ 
-        wlevel + wbtype2 + survey + type + flow + temp + cond + ph + 
-        swimmingplaying + bathing + other_snail + Bfor_pres + 
-        clothes + dishes + collectingwater + Ricecult + otherfarming +
-        (1|shehia/site), 
-      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666)
-# Save object
-saveRDS(max.noInfo.depth, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.depth.rds")
-
+max1_depth_V2 <-brm(data = snailDF.na, family = bernoulli(link = cloglog), 
+                      formula = Sh_all ~ wbtype2 + wlevel + survey + type + flow + temp + cond + ph + 
+                        swimmingplaying + bathing + other_snail + (1|survey) + (1|shehia/site), 
+                      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666, 
+                      thin = 3, cores = 2, control = list(adapt_delta = 0.999)) 
+saveRDS(max1_depth_V2, "../Data/ModelOutputs/InfectionPrevalence/max1_depth_V2.rds")
+#############################################################################
+###########################   NOT GENERATED   ###############################
+#############################################################################
 ### Drop temp
-max.noInfo.temp <-
-  brm(data = snailDF.na, 
-      family = bernoulli(link = logit), 
-      formula = Sh_all ~ 
-        wlevel + wbtype2 + survey + type + flow + depth + cond + ph + 
-        swimmingplaying + bathing + other_snail + Bfor_pres + 
-        clothes + dishes + collectingwater + Ricecult + otherfarming +
-        (1|shehia/site), 
-      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666)
-# Save object
-saveRDS(max.noInfo.temp, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.temp.rds")
-
+max1_temp_V2 <-brm(data = snailDF.na, family = bernoulli(link = cloglog), 
+                      formula = Sh_all ~ wbtype2 + wlevel + survey + type + flow + depth + cond + ph + 
+                        swimmingplaying + bathing + other_snail + (1|survey) + (1|shehia/site), 
+                      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666, 
+                      thin = 3, cores = 2, control = list(adapt_delta = 0.999)) 
+saveRDS(max1_temp_V2, "../Data/ModelOutputs/InfectionPrevalence/max1_temp_V2.rds")
+#############################################################################
+###########################   NOT GENERATED   ###############################
+#############################################################################
 ### Drop cond
-max.noInfo.cond <-
-  brm(data = snailDF.na, 
-      family = bernoulli(link = logit), 
-      formula = Sh_all ~ 
-        wlevel + wbtype2 + survey + type + flow + depth + temp + ph + 
-        swimmingplaying + bathing + other_snail + Bfor_pres + 
-        clothes + dishes + collectingwater + Ricecult + otherfarming +
-        (1|shehia/site), 
-      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666)
-# Save object
-saveRDS(max.noInfo.cond, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.cond.rds")
-
+max1_cond_V2 <-brm(data = snailDF.na, family = bernoulli(link = cloglog), 
+                      formula = Sh_all ~ wbtype2 + wlevel + survey + type + flow + depth + temp + ph + 
+                        swimmingplaying + bathing + other_snail + (1|survey) + (1|shehia/site), 
+                      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666, 
+                      thin = 3, cores = 2, control = list(adapt_delta = 0.999)) 
+saveRDS(max1_cond_V2, "../Data/ModelOutputs/InfectionPrevalence/max1_cond_V2.rds")
+#############################################################################
+###########################   NOT GENERATED   ###############################
+#############################################################################
 ### Drop ph
-max.noInfo.ph <-
-  brm(data = snailDF.na, 
-      family = bernoulli(link = logit), 
-      formula = Sh_all ~ 
-        wlevel + wbtype2 + survey + type + flow + depth + temp + cond + 
-        swimmingplaying + bathing + other_snail + Bfor_pres + 
-        clothes + dishes + collectingwater + Ricecult + otherfarming +
-        (1|shehia/site), 
-      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666)
-# Save object
-saveRDS(max.noInfo.ph, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.ph.rds")
-
+max1_ph_V2 <-brm(data = snailDF.na, family = bernoulli(link = cloglog), 
+                      formula = Sh_all ~ wbtype2 + wlevel + survey + type + flow + depth + temp + cond + 
+                        swimmingplaying + bathing + other_snail + (1|survey) + (1|shehia/site), 
+                      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666, 
+                      thin = 3, cores = 2, control = list(adapt_delta = 0.999)) 
+saveRDS(max1_ph_V2, "../Data/ModelOutputs/InfectionPrevalence/max1_ph_V2.rds")
+#############################################################################
+###########################   NOT GENERATED   ###############################
+#############################################################################
 ### Drop swimmingplaying
-max.noInfo.swimmingplaying <-
-  brm(data = snailDF.na, 
-      family = bernoulli(link = logit), 
-      formula = Sh_all ~ 
-        wlevel + wbtype2 + survey + type + flow + depth + temp + cond + ph +
-        bathing + other_snail + Bfor_pres + 
-        clothes + dishes + collectingwater + Ricecult + otherfarming +
-        (1|shehia/site), 
-      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666)
-# Save object
-saveRDS(max.noInfo.swimmingplaying, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.swimmingplaying.rds")
-
+max1_swimmingplaying_V2 <-brm(data = snailDF.na, family = bernoulli(link = cloglog), 
+                      formula = Sh_all ~ wbtype2 + wlevel + survey + type + flow + depth + temp + cond + ph +
+                        bathing + other_snail + (1|survey) + (1|shehia/site), 
+                      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666, 
+                      thin = 3, cores = 2, control = list(adapt_delta = 0.999)) 
+saveRDS(max1_swimmingplaying_V2, "../Data/ModelOutputs/InfectionPrevalence/max1_swimmingplaying_V2.rds")
+#############################################################################
+###########################   NOT GENERATED   ###############################
+#############################################################################
 ### Drop bathing
-max.noInfo.bathing <-
-  brm(data = snailDF.na, 
-      family = bernoulli(link = logit), 
-      formula = Sh_all ~ 
-        wlevel + wbtype2 + survey + type + flow + depth + temp + cond + ph +
-        swimmingplaying + other_snail + Bfor_pres + 
-        clothes + dishes + collectingwater + Ricecult + otherfarming +
-        (1|shehia/site), 
-      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666)
-# Save object
-saveRDS(max.noInfo.bathing, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.bathing.rds")
-
+max1_bathing_V2 <-brm(data = snailDF.na, family = bernoulli(link = cloglog), 
+                      formula = Sh_all ~ wbtype2 + wlevel + survey + type + flow + depth + temp + cond + ph +
+                        swimmingplaying + other_snail + (1|survey) + (1|shehia/site), 
+                      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666, 
+                      thin = 3, cores = 2, control = list(adapt_delta = 0.999)) 
+saveRDS(max1_bathing_V2, "../Data/ModelOutputs/InfectionPrevalence/max1_bathing_V2.rds")
+#############################################################################
+###########################   NOT GENERATED   ###############################
+#############################################################################
 ### Drop other_snail
-max.noInfo.other_snail <-
-  brm(data = snailDF.na, 
-      family = bernoulli(link = logit), 
-      formula = Sh_all ~ 
-        wlevel + wbtype2 + survey + type + flow + depth + temp + cond + ph +
-        swimmingplaying + bathing + Bfor_pres + 
-        clothes + dishes + collectingwater + Ricecult + otherfarming +
-        (1|shehia/site), 
-      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666)
-# Save object
-saveRDS(max.noInfo.other_snail, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.other_snail.rds")
-
-### Drop Bfor_pres
-max.noInfo.Bfor_pres <-
-  brm(data = snailDF.na, 
-      family = bernoulli(link = logit), 
-      formula = Sh_all ~ 
-        wlevel + wbtype2 + survey + type + flow + depth + temp + cond + ph +
-        swimmingplaying + bathing + other_snail + 
-        clothes + dishes + collectingwater + Ricecult + otherfarming +
-        (1|shehia/site), 
-      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666)
-# Save object
-saveRDS(max.noInfo.Bfor_pres, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.Bfor_pres.rds")
-
-### Drop clothes (LOL)
-max.noInfo.clothes <-
-  brm(data = snailDF.na, 
-      family = bernoulli(link = logit), 
-      formula = Sh_all ~
-        wlevel + wbtype2 + survey + type + flow + depth + temp + cond + ph +
-        swimmingplaying + bathing + other_snail + Bfor_pres + 
-        dishes + collectingwater + Ricecult + otherfarming +
-# Save object
-saveRDS(max.noInfo.clothes, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.clothes.rds")
-
-### Drop dishes
-max.noInfo.dishes <-
-  brm(data = snailDF.na, 
-      family = bernoulli(link = logit), 
-      formula = Sh_all ~
-        wlevel + wbtype2 + survey + type + flow + depth + temp + cond + ph +
-        swimmingplaying + bathing + other_snail + Bfor_pres + 
-        clothes + collectingwater + Ricecult + otherfarming +
-        (1|shehia/site), 
-      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666)
-# Save object
-saveRDS(max.noInfo.dishes, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.dishes.rds")
-####################################################################
-
-### Drop collectingwater
-max.noInfo.dishes <-
-  brm(data = snailDF.na, 
-      family = bernoulli(link = logit), 
-      formula = Sh_all ~
-        wlevel + wbtype2 + survey + type + flow + depth + temp + cond + ph +
-        swimmingplaying + bathing + other_snail + Bfor_pres + 
-        clothes + dishes + Ricecult + otherfarming +
-        (1|shehia/site), 
-      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666)
-# Save object
-saveRDS(max.noInfo.collectingwater, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.collectingwater.rds")
+max1_other_snail_V2 <-brm(data = snailDF.na, family = bernoulli(link = cloglog), 
+                      formula = Sh_all ~ wbtype2 + wlevel + survey + type + flow + depth + temp + cond + ph +
+                        swimmingplaying + bathing + (1|survey) + (1|shehia/site), 
+                      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666, 
+                      thin = 3, cores = 2, control = list(adapt_delta = 0.999)) 
+saveRDS(max1_other_snail_V2, "../Data/ModelOutputs/InfectionPrevalence/max1_other_snail_V2.rds")
 
 
-### Drop Ricecult
-max.noInfo.ricecult <-
-  brm(data = snailDF.na, 
-      family = bernoulli(link = logit), 
-      formula = Sh_all ~
-        wlevel + wbtype2 + survey + type + flow + depth + temp + cond + ph +
-        swimmingplaying + bathing + other_snail + Bfor_pres + 
-        clothes + dishes + collectingwater + otherfarming +
-        (1|shehia/site), 
-      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666)
-# Save object
-saveRDS(max.noInfo.ricecult, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.ricecult.rds")
-
-
-### Drop otherfarming
-max.noInfo.otherfarming <-
-  brm(data = snailDF.na, 
-      family = bernoulli(link = logit), 
-      formula = Sh_all ~
-        wlevel + wbtype2 + survey + type + flow + depth + temp + cond + ph +
-        swimmingplaying + bathing + other_snail + Bfor_pres + 
-        clothes + dishes + collectingwater + Ricecult +
-        (1|shehia/site), 
-      warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666)
-# Save object
-saveRDS(max.noInfo.otherfarming, "../Data/ModelOutputs/InfectionPrevalence/max.noInfo.otherfarming.rds")
+#############################################################################
+############################   GOT TO HERE   ################################
+#############################################################################
 ```
 
 \n
@@ -738,7 +615,7 @@ saveRDS(max.noInfo.otherfarming, "../Data/ModelOutputs/InfectionPrevalence/max.n
 
 
 
-
+### GOT TO HERE 30 April 2022
 
 
 
@@ -1814,7 +1691,7 @@ max6th_drop_depth           -9.2       5.2
 
 
 
-# Model fitting and selection - 29/4/2022  Update
+# 3. Model fitting and selection - 29/4/2022  Update
 <br/>
 <br/>
 
@@ -1829,17 +1706,19 @@ max6th_drop_depth           -9.2       5.2
 
 ## Model implementation & selection
 
-Given the inherently "low information content" of binary data, we will fit our binomial generalised linear mixed effects model using **Bayesian inference**. We will use the R package **brms**, which implements Bayesian generalized linear mixed models using the probabilistic programming language **Stan**. Please see the [brms github page](https://github.com/paul-buerkner/brms) for software installation guides (available for multiple operation systems). Moreover, "brms" allows model fit to be assessed and compared with the **Watanabe-Akaike-Information Criterion (WAIC)** and **leave-one-out cross-validation (LOO)**. We Will use WAIC LOO for model selection. 
+Given the inherently "low information content" of binary data, we will fit our binomial generalised linear mixed effects model using **Bayesian inference**. We will use the R package **brms**, which implements Bayesian generalized linear mixed models using the probabilistic programming language **Stan**. Please see the [brms github page](https://github.com/paul-buerkner/brms) for software installation guides (available for multiple operation systems). Moreover, "brms" allows model fit to be assessed and compared with the **Watanabe-Akaike-Information Criterion (WAIC)** and **leave-one-out cross-validation (LOOCV)**. We Will use WAIC LOO for model selection. 
 
 <br/>
 <br/>
 
 ### Model Specifications 
 
-<br/>
-
+* The response variable and explanatory variables are described and visualised under section '1. Introduction'. In addition to these variables, we want to account for the following **three random factors**:  
+    + **Shehia**: regions/wards on Pemba.  <br/>
+    + **Site**: site ID within Shesias. Hence, we must specify that **site is nested within Shehia**; i.e., the effect of site is dependent on the Shehia because, in this case, they are physically nested and we cannot have one site in more than one Shehia.  <br/>
+    + **Survey**: all sites were surveyed four times over the curse of one year; although surveys correlate with season of one year, there is no replicate year (i.e. all surveys were taken during one year so we can't infer anything about the effect of season *per se*). Moreover, despite expecting the level of infection among snails vary between seasons, we do not believe that it is the season in itself that is the cause other factors included in the model (e.g. temperature).  <br/>
 * **Distribution Family**: Since our data is binary (a snail is either infected or not, scored as 1 or 0, respectively), we have two distribution families to chose from: binomial or Bernoulli. We will use the **Bernoulli distribution** because it deals with data which only has 1 trial (individual snails) & only 2 possible outcomes (infected or not). On the other hand, if we tested the same individual snails multiple times over a given period, we would be dealing with a binomial distribution.         
-* **Link Function**: We will use the less common **complementary log-log (cloglog) link** function (see [here](https://bambinos.github.io/bambi/0.6.0/notebooks/alternative_links_binary.html) for further details). In contrast to the more well-known alternatives (logit and probit), cloglog is much better suited for binary data wherein the one of the outcomes is rare relative to the other, which is the case for us (there are far fewer infected snails than there are uninfected snails; Figure <span style="color: red;">**1**</span>)  
+* **Link Function**: We will use the less common **complementary log-log (cloglog) link** function (see [here](https://bambinos.github.io/bambi/0.6.0/notebooks/alternative_links_binary.html) for further details). In contrast to the more well-known alternatives (logit and probit), cloglog is much better suited for binary data wherein the one of the outcomes is rare relative to the other, which is the case for us (there are far fewer infected snails than there are uninfected snails; Figure <span style="color: red;">**1.1**</span>)  
 * We use a relatively standard number of **MCMC chains** (3), each with 15000 **iterations** and a **burn-in** of 5000. Moreover, we **thin** by 3: a reasonable trade-off between information content and manageable model output file size.   
 * Finally, since these models are fitted in STAN (rather than e.g., JAGS or BUGS) with minimally informative priors (see [here](https://www.martinmodrak.cz/2018/02/19/taming-divergences-in-stan-models/) for and excellent crash-course), we avoid divergent transitions by specifying **adapt_delta** to 0.999.   
 
@@ -1875,7 +1754,7 @@ saveRDS(max_V2, "../Data/ModelOutputs/InfectionPrevalence/max_V2.rds")
 
 ### Inspect maximal model output
 
-After ensuring that all parameter estimates of the model we just fitted have converged (i.e, Rhat < 1.1; [Gelman & Rubin, 1992](https://www.jstor.org/stable/2246093?seq=1)) and that the 'brms' package doesn't flag any other obvious reasons for concern (e.g., divergent transitions) in the code chunk above, we visually investigate the estimated parameter distributions' chains as well as their posterior distributions.    
+After ensuring that all parameter estimates of the model we just fitted have converged (i.e, Rhat < 1.1; [Gelman & Rubin, 1992](https://www.jstor.org/stable/2246093?seq=1)) and that the 'brms' package doesn't flag any other obvious reasons for concern (e.g., divergent transitions) in the above code chunk, we visually investigate the estimated parameter distributions' chains as well as their posterior distributions (density and trace plots).    
 <br/>
 <br/>
 ```{r drop_V2-inspect, message=FALSE, warning=FALSE, cache=TRUE, echo=FALSE}
@@ -1888,7 +1767,10 @@ plot(max_V2)
 <br/>
 <br/>
 
-*We do this using leave-one-out cross-validation (LOOCV) but first we must refit the maximal model dropping each explanatory variable in turn.*
+Given the 'complexity' of the model formulation, the density plots (left-hand side) are not hugely informative at this point. However, the trace plots (right-hand side) look nice ('furry caterpillars') for all of the most important parameters except for the 'sd_survey__Intercept' (last panel), where we would like some improvement (but note that it is by no means awful). The model seems to struggle somewhat with fitting the  random variable 'survey', as evident from quite a few divergences withing all chains (including the third and last, which we expect to be the best fitting one). 
+<br/>
+
+We know that we must drop one of the two continuous variables dues to their high level of correlation (Figure <span style="color: red;">**1.2**</span>), which we will accomplish through leave-one-out cross-validation (LOOCV). Hopefully, this will improve the 'survey'-variable fit, but first we will refit the maximal model dropping each continuous explanatory variable in turn (below code chunk). Note that we are not dropping any further explanatory variables as these form part of TP's hypotheses-testing. 
 
 <br/>
 <br/>
@@ -1910,9 +1792,9 @@ V2_drop_ph <-brm(data = snailDF.na, family = bernoulli(link = cloglog),
                  warmup = 5000, iter = 15000, chains = 3, inits  = 0, seed = 666,
                  thin = 3, control = list(adapt_delta = 0.999)) 
 ### Check for convergence and divergent transitions before saving output
-V2_drop_temp; V2_drop_ph 
+V2_drop_temp#; V2_drop_ph 
 saveRDS(V2_drop_temp, "../Data/ModelOutputs/InfectionPrevalence/V2_drop_temp.rds")
-saveRDS(V2_drop_ph, "../Data/ModelOutputs/InfectionPrevalence/V2_drop_ph.rds")
+#saveRDS(V2_drop_ph, "../Data/ModelOutputs/InfectionPrevalence/V2_drop_ph.rds")
 ```
 <br/>
 <br/>
@@ -1953,7 +1835,7 @@ loo_compare(loo(max_V2, save_psis = TRUE),
 <br/>
 <br/>
 
-# Results
+# 4. Results
 
 <br/>
 <br/>
@@ -1965,11 +1847,15 @@ loo_compare(loo(max_V2, save_psis = TRUE),
 
 
 
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
 
 
 
-
-# OLD SCRIPT BELOW - IGNORE
+# Old scrip below - IGNORE
 
 ### Final model
 

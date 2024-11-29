@@ -2,9 +2,14 @@
 
 Author(s): [Galina M. Jönsson](https://github.com/galinajonsson) and [Tom Pennance](https://github.com/tompennance) 
 
+> [!NOTE]
+> ## This repository was archived 29/11/2024 and is read-only.
+>  Contact [Galina Jönsson](https://github.com/galinajonsson) if you want to fork or unarchive it. 
 
-This repository contains all the code and some data for:
-**Insert manuscript info**
+# 
+
+This repository contains all the code and some data for:   
+[Pennance, Thomas](https://github.com/tompennance) 2020. *Genetic diversity and evolution within the genus Bulinus and species-level interactions with the transmission of Schistosoma haematobium group parasites*. PhD Thesis, Cardiff University. doi: [10.13140/RG.2.2.28119.19366](https://orca.cardiff.ac.uk/id/eprint/135638/)
 
 
 ## Data
